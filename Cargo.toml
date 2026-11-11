@@ -1,0 +1,19 @@
+[package]
+name = "pusat-rgb"
+version = "1.0.0"
+edition = "2024"
+license = "GPL-3.0-or-later"
+authors = ["Eresbos (github.com/ERESB0S)"]
+description = "Volt: Monster Pusat K3 Pro için açık kaynak ışık ve makro uygulaması (resmi değildir)"
+
+[dependencies]
+anyhow = "1.0.104"
+hidapi = "2.6.7"
+sha2 = "0.10.9"
+tao = "0.37.2"
+wry = "0.57.2"
+
+# Ses modu: Windows ses yakalama (WASAPI). Bu sürüm wry/tao ile zaten projede var.
+[dependencies.windows]
+version = "0.62.2"
+features = ["Win32_Media_Audio", "Win32_System_Com", "Win32_System_Com_StructuredStorage", "Win32_System_Variant", "Win32_Foundation", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging", "Win32_System_LibraryLoader", "Win32_Graphics_Gdi", "Win32_Media_Audio_Endpoints", "Win32_System_Threading", "Win32_Storage_FileSystem", "Win32_System_SystemInformation", "Win32_System_Performance", "Foundation", "Foundation_Collections", "ApplicationModel", "UI_Notifications", "UI_Notifications_Management"]

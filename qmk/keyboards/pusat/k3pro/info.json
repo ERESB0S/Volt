@@ -1,0 +1,13 @@
+{
+    "keyboard_name": "Pusat K3 Pro",
+    "maintainer": "ERESB0S",
+    "width": 22.5,
+    "height": 6.5,
+    "layouts": {
+        "LAYOUT_matrix": {
+            "layout": [
+                { "label": "Esc", "x": 0, "y": 0, "matrix": [0, 0] }
+            ]
+        }
+    }
+}

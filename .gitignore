@@ -1,0 +1,23 @@
+# Derleme çıktıları
+/target/
+/qmk/build/
+
+# Üçüncü taraf ve telifli dosyalar (dağıtılmaz)
+/araclar/
+/yedek/
+*.exe
+*.zip
+
+# Kişisel çalışma notları ve USB kayıtları
+/NOTLAR.md
+/YUKLEME_ADIMLARI.md
+/yakalama*.txt
+
+# Orijinal (fabrika) yazılım klavyeye doğrudan yazan eski deneme araçları
+/src/bin/simsek.rs
+/src/bin/write_test.rs
+/src/bin/anim_test.rs
+/src/bin/probe.rs
+
+# Kurulum programı çıktısı (GitHub Releases'a yüklenir)
+/dagitim/

@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Volt Kurulum</title>
+<style>
+  :root { --bg: #0a0a0b; --surface: #131315; --surface-2: #1a1a1d; --line: #222226; --line-2: #2e2e33; --text: #f4f4f5; --text-2: #b4b4bb; --text-3: #7a7a82; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font: 13px "Segoe UI", system-ui, sans-serif; user-select: none; overflow: hidden; }
+  main { height: 100%; display: flex; flex-direction: column; padding: 30px 32px 26px; }
+  .ust { display: flex; align-items: center; gap: 14px; }
+  .logo { width: 48px; height: 48px; border-radius: 12px; background: #18181b; display: grid; place-items: center; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
+  h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: .2px; }
+  .alt { color: var(--text-3); margin-top: 2px; }
+  .kart { margin-top: 22px; padding: 14px 16px; border: 1px solid var(--line-2); border-radius: 10px; background: var(--surface); }
+  .anahtar { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--text-2); cursor: pointer; padding: 6px 0; }
+  .anahtar input { display: none; }
+  .anahtar i { width: 30px; height: 18px; border-radius: 9px; background: var(--line-2); position: relative; flex: none; transition: background .15s; }
+  .anahtar i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--text-2); transition: transform .15s, background .15s; }
+  .anahtar input:checked + i { background: var(--text); }
+  .anahtar input:checked + i::after { transform: translateX(12px); background: #0a0a0b; }
+  .yer { margin-top: 10px; color: var(--text-3); font-size: 11.5px; word-break: break-all; }
+  .not { margin-top: 14px; color: var(--text-3); font-size: 12px; line-height: 1.6; }
+  .durum { margin-top: 14px; min-height: 20px; color: var(--text-2); }
+  .durum.hata { color: #ffb4ae; }
+  .cubuk { height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; margin-top: 8px; visibility: hidden; }
+  .cubuk i { display: block; height: 100%; width: 30%; background: var(--text); border-radius: 2px; animation: kay 1.1s ease-in-out infinite; }
+  .cubuk.goster { visibility: visible; }
+  @keyframes kay { 0% { transform: translateX(-100%); } 100% { transform: translateX(340%); } }
+  .bosluk { flex: 1; }
+  .dugmeler { display: flex; justify-content: flex-end; gap: 8px; }
+  button { height: 34px; padding: 0 18px; border-radius: 8px; border: 1px solid var(--line-2); background: var(--surface-2); color: var(--text); font: inherit; font-weight: 500; cursor: pointer; }
+  button:hover { border-color: #3a3a3f; }
+  button.ana { background: var(--text); color: #0a0a0b; border-color: var(--text); }
+  button.ana:hover { background: #fff; }
+  button:disabled { opacity: .45; cursor: default; }
+  .gizli { display: none !important; }
+  .tik { width: 44px; height: 44px; border-radius: 50%; background: rgba(74,222,128,.12); display: grid; place-items: center; margin: 18px 0 4px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="ust">
+    <div class="logo"><svg width="26" height="26" viewBox="0 0 64 64"><path d="M37 7 17 36h14l-5 21 21-30H33z" fill="#f4f4f5"/></svg></div>
+    <div><h1>Volt</h1><div class="alt">Pusat K3 Pro için ışık ve ayar uygulaması · <span id="surum"></span></div></div>
+  </div>
+
+  <div id="secenekler">
+    <div class="kart">
+      <label class="anahtar">Masaüstüne kısayol koy<input type="checkbox" id="masaustu" checked><i></i></label>
+      <label class="anahtar">Windows açılınca Volt'u başlat (tepside)<input type="checkbox" id="oto"><i></i></label>
+      <div class="yer">Kurulacağı yer: <span id="yer"></span></div>
+    </div>
+    <div class="not" id="not">Volt sadece senin kullanıcı hesabına kurulur, yönetici izni gerekmez. Başlat menüsüne eklenir; istediğin zaman Ayarlar → Uygulamalar'dan ya da Volt'un içinden kaldırabilirsin.</div>
+  </div>
+
+  <div id="bittiKap" class="gizli">
+    <div class="tik"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17.5 19 7"/></svg></div>
+    <h1 style="font-size:17px">Volt kuruldu</h1>
+    <div class="not" style="margin-top:8px">Başlat menüsünden ya da masaüstündeki kısayoldan açabilirsin. Klavyende orijinal Monster yazılımı varsa Volt ilk açılışta Volt yazılımına nasıl geçeceğini gösterir.</div>
+  </div>
+
+  <div class="durum" id="durum"></div>
+  <div class="cubuk" id="cubuk"><i></i></div>
+  <div class="bosluk"></div>
+  <div class="dugmeler">
+    <button id="kapat">Vazgeç</button>
+    <button class="ana" id="kur">Kur</button>
+    <button class="ana gizli" id="ac">Volt'u aç</button>
+  </div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const K = window.KURULUM || {kurulu: false, yol: "", surum: ""};
+$("surum").textContent = "sürüm " + K.surum;
+$("yer").textContent = K.yol;
+if (K.kurulu) { $("kur").textContent = "Yeniden kur"; $("not").textContent = "Volt bu bilgisayarda zaten kurulu. Yeniden kurarsan ayarların ve yedeklerin korunur."; }
+$("kur").onclick = () => {
+  $("kur").disabled = $("kapat").disabled = true;
+  $("durum").className = "durum"; $("cubuk").classList.add("goster");
+  window.ipc.postMessage("kur:" + ($("masaustu").checked ? 1 : 0) + ":" + ($("oto").checked ? 1 : 0));
+};
+$("kapat").onclick = () => window.ipc.postMessage("kapat");
+$("ac").onclick = () => window.ipc.postMessage("ac");
+function durum(t) { $("durum").textContent = t; }
+function hata(t) {
+  $("durum").textContent = t; $("durum").className = "durum hata"; $("cubuk").classList.remove("goster");
+  $("kur").disabled = $("kapat").disabled = false; $("kur").textContent = "Tekrar dene";
+}
+function bitti() {
+  $("cubuk").classList.remove("goster"); $("durum").textContent = "";
+  $("secenekler").classList.add("gizli"); $("bittiKap").classList.remove("gizli");
+  $("kur").classList.add("gizli"); $("ac").classList.remove("gizli");
+  $("kapat").disabled = false; $("kapat").textContent = "Kapat"; $("ac").focus();
+}
+</script>
+</body>
+</html>
