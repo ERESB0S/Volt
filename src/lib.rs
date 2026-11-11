@@ -11,3 +11,4 @@ pub mod tepsi;
 pub mod izle;
 pub mod orijinal;
 pub mod kurulum;
+pub mod yazi;

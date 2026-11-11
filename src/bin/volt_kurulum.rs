@@ -114,7 +114,7 @@ fn main() {
     // WebView2 verisi exe'nin yanına (ör. İndirilenler) değil, geçici klasöre
     let mut baglam = wry::WebContext::new(Some(std::env::temp_dir().join("VoltKurulum")));
     let gorunum = WebViewBuilder::new_with_web_context(&mut baglam)
-        .with_html(include_str!("volt_kurulum.html"))
+        .with_html(include_str!("volt_kurulum.html").replace("/*YAZI*/", &pusat_rgb::yazi::font_face_gomulu()))
         .with_initialization_script(&ilk)
         .with_background_color((10, 10, 11, 255))
         .with_devtools(false)

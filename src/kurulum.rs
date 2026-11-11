@@ -11,7 +11,7 @@ use std::os::windows::process::CommandExt;
 use std::path::PathBuf;
 use std::process::Command;
 
-pub const SURUM: &str = "1.0.0";
+pub const SURUM: &str = "1.0.1";
 const KALDIR_ANAHTAR: &str = r"HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\Volt";
 const RUN_ANAHTAR: &str = r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run";
 const PENCERESIZ: u32 = 0x0800_0000;

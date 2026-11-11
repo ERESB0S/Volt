@@ -2,8 +2,8 @@
 1 ICON "volt.ico"
 1 24 "volt.manifest"
 1 VERSIONINFO
-FILEVERSION 1,0,0,0
-PRODUCTVERSION 1,0,0,0
+FILEVERSION 1,0,1,0
+PRODUCTVERSION 1,0,1,0
 FILEOS 0x40004
 FILETYPE 0x1
 BEGIN
@@ -13,12 +13,12 @@ BEGIN
     BEGIN
       VALUE "CompanyName", "Eresbos"
       VALUE "FileDescription", "Volt"
-      VALUE "FileVersion", "1.0.0"
+      VALUE "FileVersion", "1.0.1"
       VALUE "InternalName", "volt"
       VALUE "LegalCopyright", "Copyright 2026 Eresbos. GPL-3.0-or-later"
       VALUE "OriginalFilename", "Volt.exe"
       VALUE "ProductName", "Volt"
-      VALUE "ProductVersion", "1.0.0"
+      VALUE "ProductVersion", "1.0.1"
     END
   END
   BLOCK "VarFileInfo"

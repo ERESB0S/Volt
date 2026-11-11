@@ -1313,6 +1313,13 @@ fn istek(mut s: TcpStream) -> bool {
 
     match (yontem, yol) {
         ("GET", "/") => cevapla(&mut s, "200 OK", "text/html; charset=utf-8", ARAYUZ),
+        ("GET", y) if y.starts_with("/yazi/") => match pusat_rgb::yazi::dosya(&y[6..]) {
+            Some(b) => {
+                let _ = s.write_all(format!("HTTP/1.1 200 OK\r\nContent-Type: font/ttf\r\nContent-Length: {}\r\nCache-Control: max-age=31536000\r\nConnection: close\r\n\r\n", b.len()).as_bytes());
+                let _ = s.write_all(b);
+            }
+            None => cevapla(&mut s, "404 Not Found", "text/plain", "yok"),
+        },
         ("GET", "/api/nabiz") => cevapla(&mut s, "200 OK", "text/plain", "ok"),
         ("GET", "/api/kilitler") => cevapla(&mut s, "200 OK", "application/json", &kilitler_json()),
         ("GET", "/api/makro") => cevapla(&mut s, "200 OK", "application/json", &makro_json()),
@@ -1767,6 +1774,8 @@ enum Olay {
     Kapat,
     Goster,
     Cikis,
+    /// Arayüz teması değişti (true: açık)
+    Tema(bool),
 }
 
 /// Uygulama simgesi: koyu yuvarlak kare üzerinde beyaz şimşek (n x n RGBA)
@@ -1840,10 +1849,13 @@ fn pencere(arka: bool) -> Result<()> {
         .context("Pencere açılamadı")?;
 
     let veri = std::env::var("LOCALAPPDATA").map(|d| std::path::PathBuf::from(d).join("Volt")).ok();
+    // Son kullanılan tema: pencere açılırken arka plan aynı renkte olsun
+    let tema_dosya = veri.as_ref().map(|v| v.join("tema.txt"));
+    let acik_tema = tema_dosya.as_ref().and_then(|d| std::fs::read_to_string(d).ok()).is_some_and(|t| t.trim() == "acik");
     let mut baglam = WebContext::new(veri);
     let gorunum = WebViewBuilder::new_with_web_context(&mut baglam)
         .with_url(format!("http://127.0.0.1:{PORT}/{}", if KALDIR_MODU.load(Ordering::Relaxed) { "#kaldir" } else { "" }))
-        .with_background_color((10, 10, 11, 255))
+        .with_background_color(if acik_tema { (220, 220, 225, 255) } else { (10, 10, 11, 255) })
         .with_devtools(false)
         .with_hotkeys_zoom(false)
         .with_browser_accelerator_keys(false)
@@ -1854,6 +1866,8 @@ fn pencere(arka: bool) -> Result<()> {
                 "kucult" => Olay::Kucult,
                 "buyut" => Olay::Buyut,
                 "kapat" => Olay::Kapat,
+                "tema:acik" => Olay::Tema(true),
+                "tema:koyu" => Olay::Tema(false),
                 "n" => Olay::Boyut(Y::North),
                 "s" => Olay::Boyut(Y::South),
                 "e" => Olay::Boyut(Y::East),
@@ -1899,6 +1913,12 @@ fn pencere(arka: bool) -> Result<()> {
             Event::UserEvent(Olay::Boyut(y)) => {
                 if !pen.is_maximized() {
                     let _ = pen.drag_resize_window(y);
+                }
+            }
+            Event::UserEvent(Olay::Tema(acik)) => {
+                let _ = gorunum.set_background_color(if acik { (220, 220, 225, 255) } else { (10, 10, 11, 255) });
+                if let Some(d) = &tema_dosya {
+                    let _ = std::fs::write(d, if acik { "acik" } else { "koyu" });
                 }
             }
             Event::UserEvent(Olay::Kucult) => pen.set_minimized(true),

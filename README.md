@@ -6,7 +6,7 @@ Monster Pusat K3 Pro klavye için QMK tabanlı özel klavye yazılımı (firmwar
 > Monster ve Pusat, sahiplerinin ticari markalarıdır.
 >
 > ⚠️ **Sorumluluk sende.** Klavyeye yazılım yüklemek garantiyi bozabilir ve yanlış yapılırsa klavyeyi
-> kullanılamaz hâle getirebilir. Yazılım "olduğu gibi" sunulur, hiçbir garanti verilmez (bkz. Lisans).
+> kullanılamaz hâle getirebilir. Yazılım "olduğu gibi" sunulur, hiçbir garanti verilmez (bkz. [Lisans](#lisans)).
 > Başlamadan önce **Orijinal yazılıma dönüş** bölümünü oku.
 
 ![Volt ana sayfa](ekran/ana.png)
@@ -112,3 +112,4 @@ Belgeler: [PROTOKOL.md](PROTOKOL.md) (orijinal yazılımın USB ışık protokol
 - **Volt uygulaması** (`src/`, `scripts/`): GPL-3.0-or-later. Bkz. [LICENSE](LICENSE).
 
 Kullanılan kütüphaneler: wry / tao (MIT / Apache-2.0), hidapi (MIT), windows (MIT / Apache-2.0), sha2 (MIT / Apache-2.0), anyhow (MIT / Apache-2.0), Microsoft WebView2.
+Yazı tipi: [Poppins](https://github.com/itfoundry/Poppins) (SIL Open Font License 1.1, bkz. [yazi/OFL.txt](yazi/OFL.txt)).
