@@ -93,7 +93,32 @@ fn simge_rgba(n: u32) -> Vec<u8> {
     v
 }
 
+/// Volt'un içinden başlatılan güncelleme: pencere açmadan, mevcut seçenekleri koruyarak kurar ve Volt'u yeniden açar
+fn sessiz_guncelle() {
+    let sonuc = volt_kapat().and_then(|_| {
+        pusat_rgb::kurulum::kur(VOLT, pusat_rgb::kurulum::masaustu_kisayolu_var(), false, |_| {}).map_err(|e| format!("{e:#}"))
+    });
+    match sonuc {
+        Ok(_) => {
+            let _ = std::process::Command::new(pusat_rgb::kurulum::exe_yolu()).spawn();
+        }
+        Err(e) => {
+            use windows::Win32::UI::WindowsAndMessaging::{MB_ICONERROR, MB_OK, MessageBoxW};
+            let m: Vec<u16> = format!("Volt güncellenemedi.\n\n{e}\n\nVolt_Kurulum.exe'yi GitHub'dan indirip elle de kurabilirsin.").encode_utf16().chain([0]).collect();
+            let b: Vec<u16> = "Volt güncelleme".encode_utf16().chain([0]).collect();
+            unsafe { MessageBoxW(None, windows::core::PCWSTR(m.as_ptr()), windows::core::PCWSTR(b.as_ptr()), MB_OK | MB_ICONERROR) };
+            // Volt kapandıysa eskisini yeniden aç
+            if pusat_rgb::kurulum::kurulu() && std::net::TcpListener::bind(("127.0.0.1", PORT)).is_ok() {
+                let _ = std::process::Command::new(pusat_rgb::kurulum::exe_yolu()).spawn();
+            }
+        }
+    }
+}
+
 fn main() {
+    if std::env::args().any(|a| a == "--guncelle") {
+        return sessiz_guncelle();
+    }
     let dongu = EventLoopBuilder::<Olay>::with_user_event().build();
     let vekil = dongu.create_proxy();
     let simge = |n| tao::window::Icon::from_rgba(simge_rgba(n), n, n).ok();

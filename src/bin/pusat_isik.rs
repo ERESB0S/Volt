@@ -919,6 +919,107 @@ fn son_surum(zorla: bool) -> Result<String> {
     Ok(s)
 }
 
+/* ---------------- Volt'u uygulama içinden güncelleme ---------------- */
+/// (aşama, ilerleme 0..1, hata): "" | "indiriyor" | "dogruluyor" | "kuruluyor" | "hata"
+static VOLT_GUNCEL: Mutex<(&'static str, f32, String)> = Mutex::new(("", 0.0, String::new()));
+static VOLT_GUNCELLENIYOR: AtomicBool = AtomicBool::new(false);
+
+fn volt_guncel_ayarla(a: &'static str, i: f32, h: &str) {
+    *VOLT_GUNCEL.lock().unwrap_or_else(|e| e.into_inner()) = (a, i, h.to_string());
+}
+
+/// JSON metninde anahtarın değeri ("anahtar": "değer" ya da sayı); basit, iç içe nesne aramaz
+fn json_deger<'a>(m: &'a str, anahtar: &str) -> Option<&'a str> {
+    let i = m.find(&format!("\"{anahtar}\""))? + anahtar.len() + 2;
+    let r = m[i..].trim_start().strip_prefix(':')?.trim_start();
+    if let Some(r) = r.strip_prefix('"') {
+        r.find('"').map(|j| &r[..j])
+    } else {
+        let j = r.find(|c: char| c == ',' || c == '}').unwrap_or(r.len());
+        Some(r[..j].trim())
+    }
+}
+
+/// GitHub'daki son sürümün kurulum dosyasını indirir, parmak izini doğrular ve sessiz kurulumu başlatır.
+/// Kurulum programı Volt'u kapatıp yenisini açar.
+fn volt_guncelle_baslat() {
+    if VOLT_GUNCELLENIYOR.swap(true, Ordering::SeqCst) {
+        return;
+    }
+    volt_guncel_ayarla("indiriyor", 0.0, "");
+    std::thread::spawn(|| {
+        let sonuc = (|| -> Result<()> {
+            if GUNCELLENIYOR.load(Ordering::Relaxed) {
+                bail!("Klavye yazılımı yükleniyor, bitmesini bekle.");
+            }
+            use std::os::windows::process::CommandExt;
+            let o = Command::new("curl.exe")
+                .args(["-s", "-f", "-L", "--max-time", "15", "-H", "User-Agent: Volt", "-H", "Accept: application/vnd.github+json"])
+                .arg(format!("https://api.github.com/repos/{GITHUB_DEPO}/releases/latest"))
+                .creation_flags(0x0800_0000)
+                .output()
+                .context("Sürüm bilgisi alınamadı")?;
+            if !o.status.success() {
+                bail!("GitHub'a ulaşılamadı. İnternet bağlantını kontrol et.");
+            }
+            let m = String::from_utf8_lossy(&o.stdout).to_string();
+            // Kurulum dosyasının bilgileri: "name":"Volt_Kurulum.exe" ile ardından gelen indirme adresi arası
+            let a = m.find("\"Volt_Kurulum.exe\"").context("Bu sürümde kurulum dosyası yok")?;
+            let parca = &m[a..];
+            let son = (parca.find("\"browser_download_url\"").context("İndirme adresi bulunamadı")? + 250).min(parca.len());
+            let parca = parca.get(..son).unwrap_or(parca);
+            let adres = json_deger(parca, "browser_download_url").context("İndirme adresi bulunamadı")?.to_string();
+            let boyut: u64 = json_deger(parca, "size").and_then(|s| s.parse().ok()).context("Dosya boyutu okunamadı")?;
+            let ozet = json_deger(parca, "digest").and_then(|d| d.strip_prefix("sha256:")).context("GitHub dosyanın parmak izini vermedi; elle güncelle.")?.to_ascii_lowercase();
+            if !adres.starts_with(&format!("https://github.com/{GITHUB_DEPO}/releases/download/")) || !adres.ends_with("/Volt_Kurulum.exe") {
+                bail!("Beklenmeyen indirme adresi");
+            }
+            if !(1_000_000..100_000_000).contains(&boyut) {
+                bail!("Beklenmeyen dosya boyutu");
+            }
+            let klasor = std::env::temp_dir().join("VoltGuncelleme");
+            let _ = std::fs::remove_dir_all(&klasor);
+            std::fs::create_dir_all(&klasor).context("Geçici klasör oluşturulamadı")?;
+            let dosya = klasor.join("Volt_Kurulum.exe");
+            let mut c = Command::new("curl.exe")
+                .args(["-s", "-f", "-L", "--max-time", "300", "-H", "User-Agent: Volt", "-o"])
+                .arg(&dosya)
+                .arg(&adres)
+                .creation_flags(0x0800_0000)
+                .spawn()
+                .context("İndirme başlatılamadı")?;
+            let durum = loop {
+                if let Some(d) = c.try_wait().context("İndirme izlenemedi")? {
+                    break d;
+                }
+                let n = std::fs::metadata(&dosya).map(|m| m.len()).unwrap_or(0);
+                volt_guncel_ayarla("indiriyor", (n as f32 / boyut as f32).min(1.0), "");
+                std::thread::sleep(Duration::from_millis(200));
+            };
+            if !durum.success() {
+                bail!("İndirme yarıda kaldı. İnternet bağlantını kontrol et.");
+            }
+            volt_guncel_ayarla("dogruluyor", 1.0, "");
+            let veri = std::fs::read(&dosya).context("İndirilen dosya okunamadı")?;
+            use sha2::Digest;
+            let h: String = sha2::Sha256::digest(&veri).iter().map(|b| format!("{b:02x}")).collect();
+            if veri.len() as u64 != boyut || h != ozet {
+                let _ = std::fs::remove_file(&dosya);
+                bail!("İndirilen dosya doğrulanamadı (parmak izi tutmuyor). Tekrar dene.");
+            }
+            volt_guncel_ayarla("kuruluyor", 1.0, "");
+            let mut k = Command::new(&dosya).arg("--guncelle").spawn().context("Kurulum başlatılamadı")?;
+            // Kurulum başarılı olursa bu Volt kapatılır; buraya dönüldüyse kurulum iptal edildi ya da hata verdi
+            let _ = k.wait();
+            bail!("Kurulum tamamlanmadı. Tekrar dene ya da Volt_Kurulum.exe'yi GitHub'dan indirip elle kur.")
+        })();
+        if let Err(e) = sonuc {
+            volt_guncel_ayarla("hata", 0.0, &format!("{e:#}"));
+            VOLT_GUNCELLENIYOR.store(false, Ordering::SeqCst);
+        }
+    });
+}
+
 /// Kenar ışığı eşleştirme sonucunun saklandığı dosya (%LOCALAPPDATA%\Volt\kenar_harita.json)
 fn kenar_harita_yolu() -> Option<std::path::PathBuf> {
     std::env::var("LOCALAPPDATA").ok().map(|d| std::path::PathBuf::from(d).join("Volt").join("kenar_harita.json"))
@@ -1464,6 +1565,14 @@ fn istek(mut s: TcpStream) -> bool {
                 Err(e) => hata_json(&e),
             };
             cevapla(&mut s, "200 OK", "application/json", &j);
+        }
+        ("POST", "/api/volt-guncelle") => {
+            volt_guncelle_baslat();
+            cevapla(&mut s, "200 OK", "application/json", "{\"ok\":true}");
+        }
+        ("GET", "/api/volt-guncelle") => {
+            let (a, i, h) = VOLT_GUNCEL.lock().unwrap_or_else(|e| e.into_inner()).clone();
+            cevapla(&mut s, "200 OK", "application/json", &format!("{{\"ok\":true,\"asama\":\"{a}\",\"ilerleme\":{i:.3},\"hata\":{}}}", json_metin(&h)));
         }
         ("GET", "/api/surum-denetle") | ("POST", "/api/surum-denetle") => {
             let j = match son_surum(yontem == "POST") {

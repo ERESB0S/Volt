@@ -616,7 +616,7 @@
       <div class="kart"><h4>Uygulama</h4>
         <div class="bilgi-satir"><span>Volt sürümü</span><b id="arVoltSurum">—</b></div>
         <p class="hk-not" id="arVoltNot"></p>
-        <div class="ar-dugmeler" style="margin-bottom:14px"><button class="dugme" id="arVoltDenetle">Güncellemeleri denetle</button><button class="dugme ana gizli" id="arVoltIndir">Yeni sürümü indir ↗</button></div>
+        <div class="ar-dugmeler" style="margin-bottom:14px"><button class="dugme" id="arVoltDenetle">Güncellemeleri denetle</button><button class="dugme ana gizli" id="arVoltIndir">Şimdi güncelle</button></div>
         <div class="bilgi-satir" style="margin-bottom:12px"><span>Tema</span><div class="parcali" id="temaSec" style="width:240px"><div class="parca-isaret"></div><button data-t="sistem">Sistem</button><button data-t="koyu">Koyu</button><button data-t="acik">Açık</button></div></div>
         <label class="anahtar">Windows açılınca Volt'u başlat (tepside)<input type="checkbox" id="arOtobaslat"><i></i></label>
         <p class="hk-not" style="margin-top:8px">Pencereyi kapatınca Volt saatin yanındaki tepside çalışmaya devam eder (ses modu bunun için gerekir). Tamamen kapatmak için tepsi simgesine sağ tıkla → Çıkış.</p>
@@ -747,6 +747,7 @@
       </div>
       <div class="kart"><h4>Bu sürümde</h4>
         <ul class="hk-liste">
+          <li><b>Tek tıkla güncelleme</b> (1.0.2): yeni sürüm Volt'un içinden indirilir, doğrulanır ve kurulur</li>
           <li><b>Tema</b> (1.0.1): Sistem, koyu ya da açık; Yedek ve güncelleme → Uygulama</li>
           <li><b>Yeni yazı tipi</b> (1.0.1): arayüz ve kurulum Poppins ile</li>
           <li><b>Tuş atama</b>: herhangi bir tuşu başka bir tuşa, kısayola ya da medya tuşuna çevirme</li>
@@ -1628,7 +1629,7 @@ addEventListener("pagehide", () => navigator.sendBeacon("/api/kapat"));
 /* ------------ Ana sayfa ------------ */
 let bilgi = null, bagli = false;
 const sahneKap = tuval.parentNode;
-const SURUM = "1.0.1", SURUM_TARIH = "12 Kasım 2026";
+const SURUM = "1.0.2", SURUM_TARIH = "12 Kasım 2026";
 function hakkindaAc() {
   document.body.classList.remove("anasayfa", "kenarsayfa", "acilissayfa", "araclar", "otomasyon", "tusatama", "istatistik"); document.body.classList.add("hakkinda"); $("otoGit").classList.remove("secili"); $("tusGit").classList.remove("secili"); $("isGit").classList.remove("secili"); $("kenarGit").classList.remove("secili"); $("acGit").classList.remove("secili"); $("araclarGit").classList.remove("secili");
   $("anaGit").classList.remove("secili"); $("hakkindaGit").classList.add("secili");
@@ -2922,7 +2923,8 @@ let sonSurum = null, surumHata = "";
 function surumYaz() {
   const yeni = sonSurum && surumYeni(sonSurum, SURUM);
   $("arVoltSurum").textContent = SURUM;
-  $("arVoltNot").textContent = surumHata || (!sonSurum ? "" : yeni ? "Yeni sürüm çıktı: " + sonSurum : "Volt güncel.");
+  if (voltGuncelleniyor) return;
+  $("arVoltNot").textContent = surumHata || (!sonSurum ? "" : yeni ? "Yeni sürüm çıktı: " + sonSurum + ". Tek tıkla güncelleyebilirsin; ayarların korunur." : "Volt güncel.");
   $("arVoltIndir").classList.toggle("gizli", !yeni);
 }
 async function surumDenetle(elle) {
@@ -2930,12 +2932,27 @@ async function surumDenetle(elle) {
   try {
     const j = await api("/api/surum-denetle", elle ? {} : undefined);
     sonSurum = j.son; surumHata = "";
-    if (!elle && surumYeni(sonSurum, SURUM)) bildir("Volt " + sonSurum + " çıktı. Yedek ve güncelleme sayfasından indirebilirsin.");
+    if (!elle && surumYeni(sonSurum, SURUM)) bildir("Volt " + sonSurum + " çıktı. Yedek ve güncelleme sayfasından tek tıkla güncelleyebilirsin.");
   } catch (e) { if (elle) surumHata = e.message; }
   surumYaz();
 }
 $("arVoltDenetle").onclick = () => surumDenetle(true);
-$("arVoltIndir").onclick = () => api("/api/baglanti", {k: "surum"}).catch(e => bildir(e.message, "hata"));
+let voltGuncelleniyor = false;
+const VOLT_ASAMA = {indiriyor: "İndiriliyor", dogruluyor: "Doğrulanıyor…", kuruluyor: "Kuruluyor… Volt birazdan yeniden açılacak."};
+$("arVoltIndir").onclick = async () => {
+  try { await api("/api/volt-guncelle", {}); } catch (e) { bildir(e.message, "hata"); return; }
+  voltGuncelleniyor = true; $("arVoltIndir").disabled = $("arVoltDenetle").disabled = true;
+  const izle = async () => {
+    let j; try { j = await api("/api/volt-guncelle"); } catch { setTimeout(izle, 500); return; }
+    if (j.asama === "hata") {
+      voltGuncelleniyor = false; $("arVoltIndir").disabled = $("arVoltDenetle").disabled = false;
+      $("arVoltNot").textContent = "Güncellenemedi: " + j.hata; bildir("Güncellenemedi: " + j.hata, "hata"); return;
+    }
+    $("arVoltNot").textContent = j.asama === "indiriyor" ? VOLT_ASAMA.indiriyor + " · %" + Math.round(j.ilerleme * 100) : (VOLT_ASAMA[j.asama] || "Hazırlanıyor…");
+    setTimeout(izle, 300);
+  };
+  izle();
+};
 setTimeout(() => surumDenetle(false), 4000);
 $("otoBildirim").onchange = () => { oto.bildirim = $("otoBildirim").checked; otoKaydet(); };
 $("otoBildTus").onchange = () => { oto.bildirim_tus = $("otoBildTus").checked; otoKaydet(); if (oto.programlar[0]) uyariDene(oto.programlar[0]); };

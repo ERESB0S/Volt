@@ -11,7 +11,7 @@ use std::os::windows::process::CommandExt;
 use std::path::PathBuf;
 use std::process::Command;
 
-pub const SURUM: &str = "1.0.1";
+pub const SURUM: &str = "1.0.2";
 const KALDIR_ANAHTAR: &str = r"HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\Volt";
 const RUN_ANAHTAR: &str = r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run";
 const PENCERESIZ: u32 = 0x0800_0000;
@@ -70,6 +70,11 @@ foreach ($y in @([Environment]::GetFolderPath('Programs'), [Environment]::GetFol
   if (Test-Path $l) { Remove-Item $l -Force }
 }
 "#;
+
+/// Masaüstünde Volt kısayolu var mı (sessiz güncellemede aynı seçenek korunur)
+pub fn masaustu_kisayolu_var() -> bool {
+    ps("if (Test-Path (Join-Path ([Environment]::GetFolderPath('Desktop')) 'Volt.lnk')) { exit 0 } else { exit 1 }", &[])
+}
 
 /// Volt'u kurar (ya da üstüne yazar). `ilerleme` kısa durum yazılarıyla çağrılır.
 pub fn kur(exe: &[u8], masaustu: bool, otobaslat: bool, ilerleme: impl Fn(&str)) -> Result<PathBuf> {
