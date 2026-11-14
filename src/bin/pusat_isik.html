@@ -99,8 +99,9 @@
   .grup { font-size: 11px; font-weight: 600; color: var(--text-3); letter-spacing: .4px; padding: 14px 8px 6px; }
   .oge {
     display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: 0; background: none;
-    padding: 7px 8px; border-radius: 6px; color: var(--text-2); transition: background .12s, color .12s;
+    padding: 6px 10px; border-radius: 7px; color: var(--text-2); transition: background .12s, color .12s;
   }
+  .oge + .oge { margin-top: 4px; }
   .oge:hover { background: var(--hover); color: var(--text); }
   .oge.secili { background: var(--surface-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--line-2); }
   .oge .simge { width: 16px; height: 16px; flex: none; color: currentColor; opacity: .85; }
@@ -118,6 +119,7 @@
     height: 30px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--line-2); background: var(--surface);
     color: var(--text); transition: background .12s, border-color .12s;
   }
+  label.dugme { display: inline-flex; align-items: center; box-sizing: border-box; font-size: inherit; }
   .dugme:hover { background: var(--hover); border-color: var(--line-hover); }
   .dugme.ana { background: var(--text); color: var(--ink); border-color: var(--text); font-weight: 600; }
   .dugme.ana:hover { background: var(--ana-hover); border-color: var(--ana-hover); }
@@ -272,6 +274,8 @@
   .ta-mod button { height: 28px; padding: 0 12px; border-radius: 7px; border: 1px solid var(--line-2); background: var(--surface-2); color: var(--text-2); font: inherit; font-size: 12px; cursor: pointer; }
   .ta-mod button.secili { border-color: var(--text); color: var(--text); }
   .ta-mod.pasif { opacity: .4; pointer-events: none; }
+  .ta-mod > .ta-arti { margin: 0 2px; color: var(--text-3); }
+  .ta-mod > span:first-child { min-width: 104px; }
   /* Sistem göstergesi */
   .sistem-satir { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
   .sistem-satir > span { width: 64px; flex: none; color: var(--text-2); font-size: 12.5px; }
@@ -358,6 +362,36 @@
   .ar-uyari { color: var(--warn); }
   .kart .anahtar { margin-top: 0; }
   /* Uygulama içi onay / soru penceresi */
+  /* İlk açılış rehberi */
+  #rehber { position: fixed; inset: 0; z-index: 80; }
+  #rehber .perde { position: absolute; inset: 0; transition: background .28s; }
+  #rehber.merkez .perde { background: rgba(0,0,0,.62); }
+  #rehber .isik { position: absolute; border-radius: 10px; box-shadow: 0 0 0 9999px rgba(0,0,0,.62), 0 0 0 2px var(--text-3); transition: left .28s cubic-bezier(.2,.7,.2,1), top .28s cubic-bezier(.2,.7,.2,1), width .28s cubic-bezier(.2,.7,.2,1), height .28s cubic-bezier(.2,.7,.2,1); pointer-events: none; }
+  #rehber .kart-r { position: absolute; width: 320px; max-width: calc(100vw - 32px); background: var(--surface); border: 1px solid var(--line-2); border-radius: 12px; padding: 16px 18px 14px; box-shadow: 0 20px 60px rgba(0,0,0,.5); transition: left .28s cubic-bezier(.2,.7,.2,1), top .28s cubic-bezier(.2,.7,.2,1); }
+  #rehber h3 { margin: 0 0 6px; font-size: 15px; font-weight: 600; color: var(--text); text-transform: none; letter-spacing: 0; }
+  #rehber p { margin: 0; color: var(--text-2); font-size: 12.5px; line-height: 1.6; }
+  #rehber p b { color: var(--text); font-weight: 600; }
+  #rehber .alt { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
+  #rehber .noktalar { display: flex; gap: 5px; flex: 1; }
+  #rehber .noktalar i { width: 6px; height: 6px; border-radius: 50%; background: var(--line-2); transition: background .2s, width .2s; }
+  #rehber .noktalar i.secili { background: var(--text); width: 16px; border-radius: 3px; }
+  #rehber .atla { background: none; border: 0; color: var(--text-3); font: inherit; font-size: 12px; padding: 4px 6px; }
+  #rehber .atla:hover { color: var(--text); }
+  /* Yenilikler penceresi */
+  #yenilikPencere { position: fixed; inset: 0; z-index: 75; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.66); }
+  #yenilikPencere .kutu { width: 440px; max-width: calc(100vw - 32px); max-height: calc(100vh - 80px); display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line-2); border-radius: 14px; box-shadow: 0 24px 70px rgba(0,0,0,.5); animation: belir .22s cubic-bezier(.2,.7,.2,1); overflow: hidden; }
+  #yenilikPencere .bas-y { padding: 22px 24px 16px; border-bottom: 1px solid var(--line); }
+  #yenilikPencere .etiket-y { display: inline-block; font-size: 10.5px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; color: var(--text-3); background: var(--surface-2); border: 1px solid var(--line); border-radius: 99px; padding: 2px 9px; }
+  #yenilikPencere h3 { margin: 10px 0 0; font-size: 19px; font-weight: 600; color: var(--text); text-transform: none; letter-spacing: -.2px; }
+  #yenilikPencere ul { list-style: none; margin: 0; padding: 6px 12px; overflow-y: auto; }
+  #yenilikPencere li { display: flex; gap: 14px; align-items: flex-start; padding: 11px 12px; border-radius: 9px; }
+  #yenilikPencere li:hover { background: var(--hover); }
+  #yenilikPencere .ikon-y { flex: none; width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; background: var(--surface-2); border: 1px solid var(--line); color: var(--text); }
+  #yenilikPencere .ikon-y svg { width: 16px; height: 16px; }
+  #yenilikPencere li b { display: block; font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.35; }
+  #yenilikPencere li span { display: block; margin-top: 2px; font-size: 12px; color: var(--text-2); line-height: 1.5; }
+  #yenilikPencere .alt { padding: 14px 24px 18px; border-top: 1px solid var(--line); }
+  #yenilikPencere .alt .dugme { width: 100%; height: 36px; justify-content: center; }
   #soruPencere { position: fixed; inset: 0; z-index: 70; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.55); backdrop-filter: blur(2px); }
   #soruPencere .kutu { width: 420px; max-width: calc(100vw - 32px); background: var(--surface); border: 1px solid var(--line-2); border-radius: 12px; padding: 20px; box-shadow: 0 20px 60px rgba(0,0,0,.6); animation: belir .22s cubic-bezier(.2,.7,.2,1) both; }
   #soruPencere h3 { margin: 0 0 6px; font-size: 15px; font-weight: 600; color: var(--text); text-transform: none; letter-spacing: 0; }
@@ -432,6 +466,10 @@
   /* Kendi başlık çubuğumuz (çerçevesiz pencere) */
   .baslik { display: none; height: 34px; align-items: center; border-bottom: 1px solid var(--line); background: var(--surface); }
   body.pencere .baslik { display: flex; }
+  /* Başlık çubuğu rehberin ve pencerelerin üstünde kalır: taşıma, küçültme, kapatma her zaman çalışır */
+  .baslik { position: relative; z-index: 90; }
+  .baslik.rehber-karart::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,.62); pointer-events: none; }
+  .baslik button.rehber-vurgu { position: relative; z-index: 1; }
   body.pencere .kabuk { height: calc(100vh - 34px); }
   .baslik .ad { flex: 1; display: flex; align-items: center; gap: 9px; padding-left: 12px; height: 100%; font-size: 12px; color: var(--text-2); }
   .baslik .ad svg { width: 16px; height: 16px; }
@@ -439,6 +477,13 @@
   .baslik button:hover { background: var(--hover); color: var(--text); }
   .baslik button.kapat:hover { background: #c42b1c; color: #fff; }
   .baslik button svg { width: 10px; height: 10px; }
+  .baslik button.tema-dugme { background: #fff; color: #111; }
+  .baslik button.tema-dugme:hover { background: #ddd; color: #111; }
+  .baslik button.tema-dugme svg { width: 14px; height: 14px; }
+  :root[data-tema="acik"] .baslik button.tema-dugme { background: #111; color: #fff; }
+  :root[data-tema="acik"] .baslik button.tema-dugme:hover { background: #333; color: #fff; }
+  .tema-dugme .ay, :root[data-tema="acik"] .tema-dugme .gunes { display: none; }
+  :root[data-tema="acik"] .tema-dugme .ay { display: block; }
   .kenar { position: fixed; z-index: 50; display: none; }
   body.pencere:not(.buyuk) .kenar { display: block; }
   .kenar.n, .kenar.s { left: 6px; right: 6px; height: 4px; cursor: ns-resize; }
@@ -530,6 +575,7 @@
 <body>
 <div class="baslik" id="baslik">
   <div class="ad" id="surukle"><svg viewBox="0 0 16 16"><rect width="16" height="16" rx="3.5" fill="#18181b" stroke="#2e2e32"/><path d="M9.3 1.6 4.2 9h3.5L6.4 14.4 11.8 6.7H8.3z" fill="#f5f5f7"/></svg>Volt</div>
+  <button id="temaDugme" class="tema-dugme" title="Koyu / açık tema"><svg class="gunes" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="8" cy="8" r="3"/><path d="M8 1.2v1.6M8 13.2v1.6M1.2 8h1.6M13.2 8h1.6M3.2 3.2l1.1 1.1M11.7 11.7l1.1 1.1M3.2 12.8l1.1-1.1M11.7 4.3l1.1-1.1"/></svg><svg class="ay" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M13.5 9.6A5.8 5.8 0 0 1 6.4 2.5a5.8 5.8 0 1 0 7.1 7.1z"/></svg></button>
   <button data-k="kucult" title="Simge durumuna küçült"><svg viewBox="0 0 10 10"><path d="M0 5h10" stroke="currentColor"/></svg></button>
   <button data-k="buyut" title="Ekranı kapla"><svg viewBox="0 0 10 10" id="buyutSimge"><rect x=".5" y=".5" width="9" height="9" fill="none" stroke="currentColor"/></svg></button>
   <button data-k="kapat" class="kapat" title="Kapat"><svg viewBox="0 0 10 10"><path d="M0 0l10 10M10 0 0 10" stroke="currentColor"/></svg></button>
@@ -691,7 +737,8 @@
       <div class="kart" id="taSecimKart"><h4>Seçilen tuş</h4>
         <div class="ta-secim" id="taSecim"></div>
         <div class="ta-satir"><div class="acilir" id="taHedef"><button class="acilir-dugme" type="button"><span>—</span><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 4.5 6 7.5 9 4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="acilir-liste"></div></div><button class="dugme" id="taYakala">Klavyeden bas</button></div>
-        <div class="ta-mod" id="taMod"><span>Birlikte basılsın</span><button type="button" data-m="1">Ctrl</button><button type="button" data-m="2">Shift</button><button type="button" data-m="4">Alt</button><button type="button" data-m="8">Win</button></div>
+        <div class="ta-mod" id="taMod"><span>Değiştiriciler</span><button type="button" data-m="1">Ctrl</button><button type="button" data-m="2">Shift</button><button type="button" data-m="4">Alt</button><button type="button" data-m="8">Win</button></div>
+        <div class="ta-mod" id="taEkSatir"><span>Birlikte basılsın</span><div class="acilir orta-gen" id="taEk1"><button class="acilir-dugme" type="button"><span>—</span><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 4.5 6 7.5 9 4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="acilir-liste"></div></div><span class="ta-arti">+</span><div class="acilir orta-gen" id="taEk2"><button class="acilir-dugme" type="button"><span>—</span><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 4.5 6 7.5 9 4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><div class="acilir-liste"></div></div></div>
         <div class="ar-dugmeler"><button class="dugme ana" id="taUygula">Uygula</button><button class="dugme" id="taVarsayilan">Varsayılana döndür</button></div>
       </div>
     </div></div>
@@ -730,6 +777,10 @@
         <svg viewBox="0 0 64 64"><rect x=".5" y=".5" width="63" height="63" rx="15" fill="#18181b" stroke="#2e2e32"/><path d="M37 7 17 36h14l-5 21 21-30H33z" fill="#f5f5f7"/></svg>
         <div><h2>Volt</h2><p>Monster Pusat K3 Pro için ışık, efekt ve makro kontrolü</p><span class="rozet" id="hkSurum"></span></div>
       </div>
+      <div class="kart"><h4>Rehber</h4>
+        <div style="display:flex; align-items:center; gap:12px"><p class="hk-not" style="flex:1; margin:0">Volt'u ilk açtığında gösterilen kısa tanıtım.</p>
+        <button class="dugme" id="rehberBaslat">Rehberi başlat</button></div>
+      </div>
       <div class="kart"><h4>Geliştirici</h4>
         <div class="gelistirici">
           <div class="gh"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></div>
@@ -747,6 +798,9 @@
       </div>
       <div class="kart"><h4>Bu sürümde</h4>
         <ul class="hk-liste">
+          <li><b>Birlikte basılan tuşlar</b> (1.0.3): tuş atamada bir tuşa iki tuş daha ekleme</li>
+          <li><b>Rehber ve yenilikler</b> (1.0.3): ilk açılışta kısa tanıtım, güncellemeden sonra yenilikler penceresi</li>
+          <li><b>Hızlı tema butonu ve hatırlanan pencere</b> (1.0.3): boyut, konum ve son sayfa korunur</li>
           <li><b>Tek tıkla güncelleme</b> (1.0.2): yeni sürüm Volt'un içinden indirilir, doğrulanır ve kurulur</li>
           <li><b>Tema</b> (1.0.1): Sistem, koyu ya da açık; Yedek ve güncelleme → Uygulama</li>
           <li><b>Yeni yazı tipi</b> (1.0.1): arayüz ve kurulum Poppins ile</li>
@@ -767,10 +821,10 @@
         </ul>
       </div>
       <div class="kart"><h4>Orijinal yazılıma dönüş</h4>
-        <p class="hk-not">Orijinal yazılım dosyası telif nedeniyle Volt ile dağıtılmaz. Monster'ın destek sayfasındaki resmi sürücü paketinden <code>orijinal_cikar.ps1</code> ile çıkar; sonra <code>Fn + Esc</code> ile yükleme moduna al ve Sonix Flasher'da <b>Revert to Stock</b> ile yükle. Ayrıntılar README dosyasında.</p>
+        <p class="hk-not">Monster'ın orijinal yazılımına <b>Yedek ve güncelleme</b> sayfasından tek tıkla dönebilirsin.</p>
       </div>
       <div class="kart"><h4>Açık kaynak</h4>
-        <p class="hk-not">Klavye yazılımı <b>QMK</b> ve <b>SonixQMK</b> (GPL-2.0-or-later) üzerine kuruludur ve aynı lisansla açıktır. Volt uygulaması <b>GPL-3.0</b> lisanslıdır. Uygulama <b>Rust</b>, <b>wry / tao</b> (MIT / Apache-2.0), <b>hidapi</b> ve Microsoft <b>WebView2</b> kullanır.</p>
+        <p class="hk-not">Volt ücretsiz ve açık kaynaklıdır (GPL-3.0). Klavye yazılımı QMK tabanlıdır.</p>
       </div>
       <p class="hk-not">Volt bağımsız bir uygulamadır; Monster ile resmi bir bağlantısı yoktur. Monster ve Pusat, sahiplerinin ticari markalarıdır. Yazılım "olduğu gibi" sunulur; klavyeye yazılım yüklemek garantiyi bozabilir ve tüm sorumluluk kullanıcıya aittir.</p>
     </div></div>
@@ -909,6 +963,19 @@
       <div class="ilerleme"><i id="esCubuk"></i></div>
       <div class="alt" style="margin-top:10px"><div class="bosluk"></div><button class="dugme" id="esIptal" style="opacity:.7">Eşleştirmeyi iptal et</button></div>
     </div>
+  </div>
+</div>
+<div id="rehber" class="gizli" role="dialog" aria-modal="true" aria-labelledby="rehberBaslik">
+  <div class="perde"></div><div class="isik"></div>
+  <div class="kart-r"><h3 id="rehberBaslik"></h3><p id="rehberMetin"></p>
+    <div class="alt"><div class="noktalar" id="rehberNokta"></div><button class="atla" id="rehberAtla">Atla</button><button class="dugme" id="rehberGeri">Geri</button><button class="dugme ana" id="rehberIleri">İleri</button></div>
+  </div>
+</div>
+<div id="yenilikPencere" class="gizli" role="dialog" aria-modal="true" aria-labelledby="yenilikBaslik">
+  <div class="kutu">
+    <div class="bas-y"><span class="etiket-y" id="yenilikSurum"></span><h3 id="yenilikBaslik">Volt'ta yenilikler</h3></div>
+    <ul id="yenilikListe"></ul>
+    <div class="alt"><button class="dugme ana" id="yenilikTamam">Devam et</button></div>
   </div>
 </div>
 <div id="soruPencere" class="gizli" role="dialog" aria-modal="true">
@@ -1247,7 +1314,11 @@ let saatFark = 0, saatOrnek = [];
 const simdi = () => performance.now() + saatFark;
 function saatEsitle(zaman, t0, t1) {
   if (!(zaman > 0)) return;
-  saatOrnek.push({rtt: t1 - t0, fark: zaman - (t0 + t1) / 2});
+  const yeni = {rtt: t1 - t0, fark: zaman - (t0 + t1) / 2, t: t1};
+  // Uygulama donunca / uykudan dönünce saat farkı kayabilir: eski örnekler yanıltmasın
+  if (Math.abs(yeni.fark - saatFark) > 150 + yeni.rtt / 2) saatOrnek = [];
+  saatOrnek = saatOrnek.filter(o => t1 - o.t < 20000);
+  saatOrnek.push(yeni);
   if (saatOrnek.length > 20) saatOrnek.shift();
   const en = saatOrnek.reduce((x, y) => y.rtt < x.rtt ? y : x);
   if (Math.abs(en.fark - saatFark) > 6) {
@@ -1287,8 +1358,12 @@ const KENAR_NOKTA = [[224,22],[224,30],[224,40],[224,50],[224,60],[112,64],[112,
 // Yan şeritteki yer: 0 en üst .. 5 çubuğun altı; -1 yok (yazılımdaki KENAR_SIRA ile aynı)
 const KENAR_SIRA = [1,2,3,4,5,-1,-1,-1,-1,0,0,1,2,3,4,5,0,0];
 
-function ciz() {
+let cizSon = 0;
+function ciz(zaman) {
   const a = ayar; if (!a) { requestAnimationFrame(ciz); return; }
+  // Her ikinci ekran yenilemesinde çiz (~30-40 kare/sn): önizleme akıcı kalır, işlemci/ekran kartı yükü yarıya iner
+  if (zaman - cizSon < 24) { requestAnimationFrame(ciz); return; }
+  cizSon = zaman;
   const t = simdi();
   onVuruslar = onVuruslar.filter(v => t - v.t < 8000);
   { const h = Math.min(1, hizHedef / 100); hizGosterge += (h - hizGosterge) * (h > hizGosterge ? .25 : .06); }
@@ -1629,7 +1704,7 @@ addEventListener("pagehide", () => navigator.sendBeacon("/api/kapat"));
 /* ------------ Ana sayfa ------------ */
 let bilgi = null, bagli = false;
 const sahneKap = tuval.parentNode;
-const SURUM = "1.0.2", SURUM_TARIH = "12 Kasım 2026";
+const SURUM = "1.0.3", SURUM_TARIH = "14 Kasım 2026";
 function hakkindaAc() {
   document.body.classList.remove("anasayfa", "kenarsayfa", "acilissayfa", "araclar", "otomasyon", "tusatama", "istatistik"); document.body.classList.add("hakkinda"); $("otoGit").classList.remove("secili"); $("tusGit").classList.remove("secili"); $("isGit").classList.remove("secili"); $("kenarGit").classList.remove("secili"); $("acGit").classList.remove("secili"); $("araclarGit").classList.remove("secili");
   $("anaGit").classList.remove("secili"); $("hakkindaGit").classList.add("secili");
@@ -1640,7 +1715,7 @@ function hakkindaAc() {
   api("/api/bilgi").then(b => {
     const p = b.surum || 1;
     $("hkProtokol").textContent = String(p);
-    $("hkYazilim").textContent = "QMK simsek · " + (p >= 14 ? "1.0.0" : "eski sürüm, güncelle");
+    $("hkYazilim").textContent = "Volt · " + (p >= 14 ? "1.0.0" : "eski sürüm, güncelle");
   }).catch(() => { $("hkYazilim").textContent = "Bağlı değil"; $("hkProtokol").textContent = "—"; });
 }
 let gorunumAd = "";
@@ -1778,7 +1853,7 @@ if (window.ipc) {
   document.body.classList.add("pencere");
   const gonderP = k => window.ipc.postMessage(k);
   document.querySelectorAll(".baslik button, .kenar").forEach(el => {
-    if (el.tagName === "BUTTON") el.onclick = () => gonderP(el.dataset.k);
+    if (el.tagName === "BUTTON") { if (el.dataset.k) el.onclick = () => gonderP(el.dataset.k); }
     else el.onmousedown = e => { if (e.button === 0) gonderP(el.dataset.k); };
   });
   $("surukle").onmousedown = e => { if (e.button === 0 && e.detail === 1) gonderP("surukle"); };
@@ -1849,6 +1924,11 @@ document.querySelectorAll("#temaSec button").forEach(b => b.onclick = () => {
   temaUygula();
 });
 matchMedia("(prefers-color-scheme: light)").addEventListener("change", temaUygula);
+// Başlık çubuğundaki hızlı geçiş: o an görünenin tersine geçer
+$("temaDugme").onclick = () => {
+  try { localStorage.setItem("tema", document.documentElement.dataset.tema === "acik" ? "koyu" : "acik"); } catch {}
+  temaUygula();
+};
 setTimeout(temaUygula, 0);
 // Parçalı seçicilerde kayan arka plan
 function parcaTasi() {
@@ -2090,6 +2170,9 @@ async function klavyedenOku() {
     try { const mm = await api("/api/makro"); if (mm.destek) m = mm.makro; } catch {}
     for (let p = 0; p < 4; p++) yedek.profiller.push(p === yedek.aktif ? {ayar: ayarSec(a), makro: m} : {ayar: null, makro: null});
   }
+  // Tüm profillere ortak: açılış animasyonu ve göstergeler
+  try { const ac = await api("/api/acilis"); if (ac.destek) yedek.acilis = ac.stil; } catch {}
+  try { const g = await api("/api/gosterge"); if (g.destek) yedek.gosterge = {caps: g.caps, num: g.num, scroll: g.scroll, fn: g.fn, renk: g.renk}; } catch {}
   return yedek;
 }
 async function profilYukle(p, pr) {
@@ -2100,6 +2183,8 @@ async function profilYukle(p, pr) {
 async function yedekGeriYukle(y) {
   for (let p = 0; p < 4; p++) if (y.profiller[p]) await profilYukle(p, y.profiller[p]);
   try { await api("/api/profil", {p: y.aktif || 0}); } catch {}
+  if (Number.isInteger(y.acilis)) { try { await api("/api/acilis", {islem: "kaydet", stil: y.acilis}); } catch {} }
+  if (y.gosterge) { const g = y.gosterge; try { await api("/api/gosterge", {caps: g.caps ? 1 : 0, num: g.num ? 1 : 0, scroll: g.scroll ? 1 : 0, fn: g.fn ? 1 : 0, renk: g.renk}); } catch {} }
   const j = await api("/api/oku"); ekranaYaz(j); kirliYap(false); profilYaz(j); makroAnahtar = ""; bilgiAl();
 }
 async function yedekKaydet(onEk = "Yedek") {
@@ -2330,8 +2415,137 @@ $("kdKaldir").onclick = async () => {
     $("kdDurum").textContent = "Volt kaldırıldı. Güle güle!"; $("kdDurum").className = "hk-not";
   } catch (e) { $("kdDurum").textContent = "Kaldırılamadı: " + e.message; $("kdKaldir").disabled = $("kdVazgec").disabled = false; }
 };
+/* ------------ Yenilikler: güncellemeden sonraki ilk açılışta bir kez ------------ */
+const YENILIKLER = [
+  {i: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="4" width="13" height="8.5" rx="1.5"/><path d="M4 7h1M7.5 7h1M11 7h1M5 10h6"/></svg>', b: "Birlikte basılan tuşlar", m: "Tuş atamada bir tuşa iki tuş daha ekle. Klavye yazılımını güncellemen gerekir."},
+  {i: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1 1M11.6 11.6l1 1M3.4 12.6l1-1M11.6 4.4l1-1"/></svg>', b: "Hızlı tema butonu", m: "Başlık çubuğundan tek tıkla koyu ya da açık tema."},
+  {i: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><path d="M1.5 5.5h13"/></svg>', b: "Pencere hatırlanır", m: "Boyut, konum ve en son açık sayfa korunur."},
+  {i: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6.5"/><path d="m10.5 5.5-1.6 3.4-3.4 1.6 1.6-3.4z"/></svg>', b: "Rehber", m: "Volt'u tanıtan kısa tur. Hakkında sayfasından başlatabilirsin."},
+  {i: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 1.5 3.5 9H8l-1 5.5L12.5 7H8z"/></svg>', b: "Daha hafif", m: "Arka planda önizleme durur, açıkken işlemci yükü azaldı."},
+  {i: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10.2 2.2a3.3 3.3 0 0 0-4 4.3L2 10.7a1.3 1.3 0 0 0 1.9 1.9l4.2-4.2a3.3 3.3 0 0 0 4.3-4l-2 2-1.6-.5-.5-1.6z"/></svg>', b: "Düzeltmeler", m: "Klavye güncellemesinde açılış animasyonu ve göstergeler korunur; kenar ışığı önizlemesi ve boş ekran sorunu düzeldi."},
+];
+function yenilikGoster() {
+  $("yenilikSurum").textContent = "Sürüm " + SURUM;
+  $("yenilikListe").innerHTML = YENILIKLER.map(y => `<li><div class="ikon-y">${y.i}</div><div><b>${y.b}</b><span>${y.m}</span></div></li>`).join("");
+  $("yenilikPencere").classList.remove("gizli");
+  $("yenilikTamam").focus();
+}
+$("yenilikTamam").onclick = () => $("yenilikPencere").classList.add("gizli");
+$("yenilikPencere").addEventListener("keydown", e => { if (e.key === "Escape") $("yenilikTamam").click(); });
+// Güncelleyen kullanıcı yenilikleri görür; rehberi Hakkında'dan açabilir (ikisi üst üste gelmesin)
+let yenilikDenetim = api("/api/yenilikler").then(j => {
+  if (!j.goster || location.hash === "#kaldir") return false;
+  try { localStorage.setItem("rehber", "1"); } catch {}
+  setTimeout(yenilikGoster, 900);
+  return true;
+}).catch(() => false);
+
+/* ------------ İlk açılış rehberi ------------ */
+// sayfa: "ana" (genel bakış) ya da "efekt" (efekt düzenleyici); kosul: yalnızca görünürse gösterilen adım
+const REHBER = [
+  {sayfa: "ana", b: "Volt'a hoş geldin", m: "Klavyenin ışıklarını, tuşlarını ve makrolarını buradan yönetirsin. Kısa bir turla nelerin nerede olduğunu gösterelim."},
+  {sayfa: "ana", h: "#liste", b: "Sayfalar", m: "Kenar ışıkları, açılış animasyonu, otomasyon, tuş atama ve istatistik burada. Altta tuş ışığı efektleri listelenir: birine tıklayınca ayarları açılır."},
+  {sayfa: "ana", h: "#profilKap", kosul: true, b: "Profiller", m: "<b>M1–M4</b> dört ayrı ayar takımıdır. Klavyedeki M tuşlarıyla ya da buradan geçebilirsin."},
+  {sayfa: "ana", h: "#anaOnizleme", b: "Canlı önizleme", m: "Klavyendeki ışıkların aynısı burada oynar. Bastığın tuşlar da önizlemede görünür."},
+  {sayfa: "ana", h: "#bEfektKart", b: "Etkin efekt", m: "Klavyede şu an çalışan efekt. Tıklayınca ayarlarına gidersin."},
+  {sayfa: "efekt", h: ".sag", b: "Efekt ayarları", m: "Rengi, hızı ve parlaklığı buradan değiştir. Değişiklikler klavyede hemen denenir."},
+  {sayfa: "efekt", h: "#kaydet", b: "Kaydet", m: "Ayarları kalıcı yapmak için <b>Kaydet</b>'e bas: klavyenin hafızasına yazılır, Volt kapalıyken de geçerli olur. <b>Geri al</b> son kayda döner."},
+  {sayfa: "ana", h: "#araclarGit", b: "Yedek ve güncelleme", m: "Profillerini ve makrolarını yedekle, klavye yazılımını ve Volt'u buradan güncelle."},
+  {sayfa: "ana", h: "#temaDugme", kosul: true, b: "Tema", m: "Koyu ve açık tema arasında buradan geçersin."},
+  {sayfa: "ana", b: "Hazırsın", m: "Rehberi istediğin zaman <b>Hakkında</b> sayfasından yeniden açabilirsin."},
+];
+let rehberAdim = 0, rehberListe = [];
+const rehberAcik = () => !$("rehber").classList.contains("gizli");
+function rehberHedef(a) {
+  if (!a.h) return null;
+  const el = document.querySelector(a.h);
+  return el && el.offsetParent !== null && el.getBoundingClientRect().width > 0 ? el : null;
+}
+function rehberYerlestir() {
+  const a = rehberListe[rehberAdim]; if (!a) return;
+  const isik = document.querySelector("#rehber .isik"), kart = document.querySelector("#rehber .kart-r");
+  const el = rehberHedef(a), W = innerWidth, H = innerHeight, kw = kart.offsetWidth, kh = kart.offsetHeight, b = 6;
+  const U = document.body.classList.contains("pencere") ? 34 + 8 : 8; // başlık çubuğunun altında kal
+  if (!el) {
+    $("rehber").classList.add("merkez"); isik.style.opacity = ""; document.querySelector(".baslik").classList.remove("rehber-karart"); Object.assign(isik.style, {left: W / 2 + "px", top: H / 2 + "px", width: "0", height: "0"});
+    Object.assign(kart.style, {left: (W - kw) / 2 + "px", top: (H - kh) / 2 + "px"}); return;
+  }
+  $("rehber").classList.remove("merkez");
+  const r = el.getBoundingClientRect();
+  const x = Math.max(4, r.left - b), y = Math.max(4, r.top - b), w = Math.min(W - 8 - x, r.width + 2 * b), h = Math.min(H - 8 - y, r.height + 2 * b);
+  Object.assign(isik.style, {left: x + "px", top: y + "px", width: w + "px", height: h + "px"});
+  // Kartı hedefin sağına, olmazsa soluna, altına ya da üstüne koy
+  const g = 14, sigar = (l, t) => l >= 8 && t >= U && l + kw <= W - 8 && t + kh <= H - 8;
+  const orta = Math.min(Math.max(U, y + h / 2 - kh / 2), H - kh - 8), ortaX = Math.min(Math.max(8, x + w / 2 - kw / 2), W - kw - 8);
+  const yer = [[x + w + g, orta], [x - kw - g, orta], [ortaX, y + h + g], [ortaX, y - kh - g]].find(([l, t]) => sigar(l, t)) || [(W - kw) / 2, (H - kh) / 2];
+  Object.assign(kart.style, {left: yer[0] + "px", top: yer[1] + "px"});
+  // Hedef başlık çubuğundaysa: sayfa tamamen kararır, başlık çubuğu da kararır, yalnız hedef açık kalır
+  const baslikta = !!el.closest(".baslik");
+  $("rehber").classList.toggle("merkez", baslikta); isik.style.opacity = baslikta ? "0" : "";
+  document.querySelector(".baslik").classList.toggle("rehber-karart", baslikta);
+}
+function rehberGoster() {
+  const a = rehberListe[rehberAdim], son = rehberAdim === rehberListe.length - 1;
+  // Adımın sayfasına geç (efekt ayarları için efekt düzenleyici açılır)
+  const anada = document.body.classList.contains("anasayfa");
+  const gecis = a.sayfa === "efekt" ? anada : !anada;
+  if (gecis) gorunum(a.sayfa === "ana");
+  $("rehberBaslik").textContent = a.b; $("rehberMetin").innerHTML = a.m;
+  $("rehberNokta").innerHTML = rehberListe.map((_, k) => '<i class="' + (k === rehberAdim ? "secili" : "") + '"></i>').join("");
+  $("rehberGeri").classList.toggle("gizli", rehberAdim === 0);
+  $("rehberAtla").classList.toggle("gizli", son);
+  $("rehberIleri").textContent = son ? "Başla" : rehberAdim === 0 ? "Turu başlat" : "İleri";
+  // Başlık çubuğu perdenin üstünde kaldığı için oradaki hedefe çerçeveyi kendisi çizer
+  document.querySelectorAll(".rehber-vurgu").forEach(e => e.classList.remove("rehber-vurgu"));
+  const hedef = rehberHedef(a); if (hedef && hedef.closest(".baslik")) hedef.classList.add("rehber-vurgu");
+  rehberYerlestir();
+  if (gecis) setTimeout(rehberYerlestir, 120), setTimeout(rehberYerlestir, 450); // sayfa açılış animasyonundan sonra yeniden hizala
+  $("rehberIleri").focus();
+}
+function rehberBaslat() {
+  if (!document.body.classList.contains("anasayfa")) gorunum(true);
+  $("rehber").classList.remove("gizli");
+  setTimeout(() => {
+    // Koşullu adımlar (ör. klavye bağlı değilken profiller, tarayıcıda başlık çubuğu) görünmüyorsa atlanır
+    rehberListe = REHBER.filter(a => !a.kosul || rehberHedef(a));
+    rehberAdim = 0; rehberGoster();
+  }, 60);
+}
+function rehberBitir() {
+  document.querySelectorAll(".rehber-vurgu").forEach(e => e.classList.remove("rehber-vurgu"));
+  document.querySelector(".baslik").classList.remove("rehber-karart");
+  $("rehber").classList.add("gizli");
+  if (!document.body.classList.contains("anasayfa") && rehberListe[rehberAdim] && rehberListe[rehberAdim].sayfa === "efekt") gorunum(true);
+  try { localStorage.setItem("rehber", "1"); } catch {}
+}
+$("rehberIleri").onclick = () => { if (rehberAdim >= rehberListe.length - 1) rehberBitir(); else { rehberAdim++; rehberGoster(); } };
+$("rehberGeri").onclick = () => { if (rehberAdim > 0) { rehberAdim--; rehberGoster(); } };
+$("rehberAtla").onclick = rehberBitir;
+$("rehberBaslat").onclick = rehberBaslat;
+addEventListener("resize", () => { if (!$("rehber").classList.contains("gizli")) rehberYerlestir(); });
+addEventListener("keydown", e => {
+  if ($("rehber").classList.contains("gizli")) return;
+  if (e.key === "Escape") rehberBitir();
+  else if (e.key === "ArrowRight") $("rehberIleri").click();
+  else if (e.key === "ArrowLeft") $("rehberGeri").click();
+  else return;
+  e.preventDefault(); e.stopPropagation();
+}, true);
+{ let gordu = false; try { gordu = localStorage.getItem("rehber") === "1"; } catch {}
+  if (!gordu && !location.hash) setTimeout(() => yenilikDenetim.then(y => { if (!y) rehberBaslat(); }), 2500); }
+
+// Son açık sayfayı hatırla: Volt yeniden açılınca oradan devam eder
+document.querySelectorAll("#liste .oge, .alt-menu .oge").forEach(o => o.addEventListener("click", () => {
+  try { localStorage.setItem("sonSayfa", o.id && o.id.endsWith("Git") ? o.id : "efekt"); } catch {}
+}));
+$("bEfektKart").addEventListener("click", () => { try { localStorage.setItem("sonSayfa", "efekt"); } catch {} });
 if (location.hash === "#kaldir") setTimeout(kaldirAc, 400);
 else if (location.hash && $(location.hash.slice(1) + "Git")) setTimeout(() => $(location.hash.slice(1) + "Git").click(), 400);
+else {
+  let son = null; try { son = localStorage.getItem("sonSayfa"); } catch {}
+  if (son === "efekt") setTimeout(() => { if (!rehberAcik()) gorunum(false); }, 400);
+  else if (son && son !== "anaGit" && $(son)) setTimeout(() => { if (!rehberAcik()) $(son).click(); }, 400);
+}
 
 function araclarAc() {
   document.body.classList.remove("anasayfa", "kenarsayfa", "acilissayfa", "hakkinda", "otomasyon", "tusatama", "istatistik", "kaldirma"); document.body.classList.add("araclar");
@@ -2688,6 +2902,9 @@ const TA_GRUP = [["", [0]], ["Harf", aralik(0x04, 0x1D)], ["Rakam", aralik(0x1E,
   ["Düzenleme", [0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x39, 0x65]], ["F tuşu", [...aralik(0x3A, 0x45), ...aralik(0x68, 0x73)]], ["Gezinme", aralik(0x46, 0x52)],
   ["Numpad", aralik(0x53, 0x63)], ["Değiştirici", aralik(0xE0, 0xE7)], ["Medya", [...aralik(0xA8, 0xAF), ...aralik(0xB1, 0xBE), 0xA6]]];
 const TA_SECENEK = TA_GRUP.flatMap(([g, l]) => l.map(v => ({v, ad: taAd(v), ek: g})));
+// Birlikte basılacak tuş seçenekleri ("Yok" + tüm tuşlar, devre dışı hariç)
+const TA_EK_SECENEK = [{v: 0, ad: "Yok"}, ...TA_SECENEK.filter(o => o.v !== 0)];
+const taAdTam = (a, e) => [taAd(a), ...(e ? [e & 0xFF, e >> 8].filter(Boolean).map(taAd) : [])].join(" + ");
 // Tarayıcının tuş adı (fiziksel konum) -> USB tuş kodu
 const TA_KOD = (() => {
   const m = {Enter:0x28,Escape:0x29,Backspace:0x2A,Tab:0x2B,Space:0x2C,Minus:0x2D,Equal:0x2E,BracketLeft:0x2F,BracketRight:0x30,Backslash:0x31,Semicolon:0x33,Quote:0x34,
@@ -2702,9 +2919,10 @@ const TA_KOD = (() => {
   for (let i = 1; i <= 24; i++) m["F" + i] = i <= 12 ? 0x39 + i : 0x5B + i;
   return m;
 })();
-let taTuslar = null, taSecili = -1, taTaban = 0, taModlar = 0, taYakaliyor = false;
+let taTuslar = null, taSecili = -1, taTaban = 0, taModlar = 0, taYakaliyor = false, taEk1 = 0, taEk2 = 0, taEkDestek = false;
 function taYukle(j) {
-  if (j.destek) { taTuslar = {}; j.tuslar.forEach(([l, v, a]) => taTuslar[l] = {v, a}); } else taTuslar = null;
+  if (j.destek) { taTuslar = {}; j.tuslar.forEach(([l, v, a, e]) => taTuslar[l] = {v, a, e: a >= 0 ? e || 0 : 0}); } else taTuslar = null;
+  taEkDestek = !!j.ek_destek;
   if (taTuslar && !taTuslar[taSecili]) taSecili = -1;
   $("taNot").textContent = !taTuslar ? "Klavyedeki yazılım tuş atamayı desteklemiyor. Yedek ve güncelleme sayfasından klavye yazılımını güncelle."
     : "Değiştirmek istediğin tuşa tıkla. Değiştirilen tuşlar sarı görünür. Fn, tekerlek geçişi ve üst sıradaki G/M tuşları değiştirilemez. Atamalar klavyede saklanır, tüm profillerde geçerlidir.";
@@ -2721,7 +2939,7 @@ function taCiz() {
     const et = (typeof yz === "string" ? yz : yz.h || yz.n || yz.a || "") || (n === 94 ? "Boşluk" : "");
     const sinif = "ta-tus" + (!t ? " kilitli" : "") + (t && t.a >= 0 ? " atanmis" : "") + (n === taSecili ? " secili" : "");
     h += `<button type="button" class="${sinif}" data-l="${n}" title="${t ? kacis(taAd(t.v)) : ""}" style="left:${x * u}px;top:${(y - .2) * u}px;width:${w * u - 4}px;height:${yk * u - 4}px">` +
-      `<span>${kacis(et)}</span>${t && t.a >= 0 ? "<small>" + kacis(taAd(t.a)) + "</small>" : ""}</button>`;
+      `<span>${kacis(et)}</span>${t && t.a >= 0 ? "<small>" + kacis(taAdTam(t.a, t.e)) + "</small>" : ""}</button>`;
   }
   kap.innerHTML = h; tusYaziSigdir(kap);
   kap.querySelectorAll(".ta-tus:not(.kilitli)").forEach(b => b.onclick = () => taSec(+b.dataset.l));
@@ -2730,13 +2948,14 @@ function taCiz() {
 function taSec(l) {
   taSecili = l; const t = taTuslar[l], kod = t.a >= 0 ? t.a : t.v;
   taTaban = kod & 0xFF; taModlar = taTaban >= 0xE0 ? 0 : kod >> 8; taYakalaBitir();
+  const e = t.a >= 0 ? t.e : 0; taEk1 = e & 0xFF; taEk2 = e >> 8;
   taCiz();
 }
 function taSecimYaz() {
   const t = taTuslar && taTuslar[taSecili];
   $("taSecimKart").classList.toggle("pasif", !t);
   if (!t) { $("taSecim").textContent = "Önce yukarıdan bir tuş seç."; acilirKur($("taHedef"), TA_SECENEK, 0, () => {}); taModYaz(); return; }
-  $("taSecim").innerHTML = `<b>${kacis(taAd(t.v))}</b> tuşu ${t.a >= 0 ? "şu an <b>" + kacis(taAd(t.a)) + "</b> olarak çalışıyor." : "varsayılan hâlinde."} Ne yapsın?`;
+  $("taSecim").innerHTML = `<b>${kacis(taAd(t.v))}</b> tuşu ${t.a >= 0 ? "şu an <b>" + kacis(taAdTam(t.a, t.e)) + "</b> olarak çalışıyor." : "varsayılan hâlinde."} Ne yapsın?`;
   const sec = TA_SECENEK.some(o => o.v === taTaban) ? TA_SECENEK : [{v: taTaban, ad: taAd(taTaban), ek: "Varsayılan"}, ...TA_SECENEK];
   acilirKur($("taHedef"), sec, taTaban, v => { taTaban = v; taModYaz(); });
   taModYaz();
@@ -2744,24 +2963,29 @@ function taSecimYaz() {
 }
 function taModYaz() {
   $("taMod").classList.toggle("pasif", taTaban === 0 || taTaban >= 0xE0 || !(taTuslar && taTuslar[taSecili]));
+  $("taEkSatir").classList.toggle("pasif", taTaban === 0 || !taEkDestek || !(taTuslar && taTuslar[taSecili]));
+  $("taEkSatir").title = taEkDestek ? "" : "Bunun için klavye yazılımını güncelle (Yedek ve güncelleme)";
+  acilirKur($("taEk1"), TA_EK_SECENEK, taEk1, v => { taEk1 = v; });
+  acilirKur($("taEk2"), TA_EK_SECENEK, taEk2, v => { taEk2 = v; });
   $("taMod").querySelectorAll("button").forEach(b => b.classList.toggle("secili", !!(taModlar & +b.dataset.m)));
 }
 $("taMod").querySelectorAll("button").forEach(b => b.onclick = () => { taModlar ^= +b.dataset.m; taModYaz(); });
 async function taGonder(mesaj) {
-  const atama = Object.entries(taTuslar).filter(([, t]) => t.a >= 0).map(([l, t]) => l + ":" + t.a).join(",");
+  const atama = Object.entries(taTuslar).filter(([, t]) => t.a >= 0).map(([l, t]) => l + ":" + t.a + (t.e ? ":" + t.e : "")).join(",");
   try { taYukle(await api("/api/tuslar", {atama})); bildir(mesaj); }
   catch (e) { bildir(e.message, "hata"); try { taYukle(await api("/api/tuslar")); } catch {} }
 }
 $("taUygula").onclick = () => {
   const t = taTuslar && taTuslar[taSecili]; if (!t) return;
   const kod = taTaban === 0 || taTaban >= 0xE0 ? taTaban : (taModlar << 8) | taTaban;
-  t.a = kod === t.v ? -1 : kod;
-  taGonder(t.a < 0 ? "Tuş varsayılan hâline döndü" : taAd(t.v) + " → " + taAd(kod));
+  const ekler = [taEk1, taEk2].filter(v => v && v !== taTaban), e = taTaban && taEkDestek ? (ekler[0] || 0) | ((ekler[1] || 0) << 8) : 0;
+  t.a = kod === t.v && !e ? -1 : kod; t.e = t.a >= 0 ? e : 0;
+  taGonder(t.a < 0 ? "Tuş varsayılan hâline döndü" : taAd(t.v) + " → " + taAdTam(kod, e));
 };
-$("taVarsayilan").onclick = () => { const t = taTuslar && taTuslar[taSecili]; if (!t) return; t.a = -1; taTaban = t.v & 0xFF; taModlar = t.v >> 8; taGonder("Tuş varsayılan hâline döndü"); };
+$("taVarsayilan").onclick = () => { const t = taTuslar && taTuslar[taSecili]; if (!t) return; t.a = -1; t.e = 0; taEk1 = taEk2 = 0; taTaban = t.v & 0xFF; taModlar = t.v >> 8; taGonder("Tuş varsayılan hâline döndü"); };
 $("taSifirla").onclick = () => {
   if (!taTuslar || !confirm("Tüm tuş atamaları silinsin mi? Bütün tuşlar varsayılan hâline döner.")) return;
-  Object.values(taTuslar).forEach(t => t.a = -1); taSecili = -1; taGonder("Tüm tuşlar varsayılan hâline döndü");
+  Object.values(taTuslar).forEach(t => { t.a = -1; t.e = 0; }); taSecili = -1; taGonder("Tüm tuşlar varsayılan hâline döndü");
 };
 function taYakalaBitir() { taYakaliyor = false; $("taYakala").classList.remove("ana"); $("taYakala").textContent = "Klavyeden bas"; }
 $("taYakala").onclick = () => {

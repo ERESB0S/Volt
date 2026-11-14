@@ -52,6 +52,8 @@ const KMT_TUS_YAZ: u8 = 0xB6;
 const KMT_ACILIS: u8 = 0xB7;
 const KMT_SISTEM: u8 = 0xB8;
 const KMT_SAYAC: u8 = 0xB9;
+const KMT_TUS_EK_OKU: u8 = 0xBA;
+const KMT_TUS_EK_YAZ: u8 = 0xBB;
 const KENAR_SISTEM: u8 = 16;
 const SAYAC_LED: usize = 122;
 const TUS_SAYI: usize = 112;
@@ -63,7 +65,7 @@ const BOYA_LED: usize = 140;
 
 /// Volt ile birlikte gelen klavye yazılımı ve haberleşme sürümü. Klavyedeki daha eskiyse güncelleme önerilir.
 const YAZILIM: &[u8] = include_bytes!("../../firmware/volt_k3pro.bin");
-const YAZILIM_PROTOKOL: u8 = 16;
+const YAZILIM_PROTOKOL: u8 = 17;
 
 /// Yazılım güncellenirken diğer iş parçacıkları klavyeye dokunmasın
 static GUNCELLENIYOR: AtomicBool = AtomicBool::new(false);
@@ -207,9 +209,9 @@ fn guncelle_baslat(hedef: &str) {
             Ok(()) => {
                 if !orijinale {
                     // Yükleme klavyenin hafızasını sıfırlar: tuş atamalarını Volt'taki kopyadan geri yaz
-                    let a = tus_dosya_oku();
+                    let (a, e) = tus_dosya_oku();
                     if a.iter().any(|&k| k != 0xFFFF) {
-                        let _ = tuslar_yaz(&a);
+                        let _ = tuslar_yaz(&a).and_then(|_| tus_ek_yaz(&e));
                     }
                 }
                 guncelle_ayarla("bitti", 1.0, "")
@@ -825,6 +827,45 @@ fn tuslar_oku() -> Result<Option<Vec<(u16, u16)>>> {
     Ok(Some(v))
 }
 
+/// Ek tuşlar (ek1 | ek2 << 8); klavye yazılımı desteklemiyorsa None (sürüm 17)
+fn tus_ek_oku() -> Result<Option<Vec<u16>>> {
+    let mut v = Vec::with_capacity(TUS_SAYI);
+    for bas in (0..TUS_SAYI).step_by(14) {
+        let c = ham(KMT_TUS_EK_OKU, &[bas as u8])?;
+        if c[3] < 17 {
+            return Ok(None);
+        }
+        for n in 0..(TUS_SAYI - bas).min(14) {
+            v.push(u16::from_le_bytes([c[4 + n * 2], c[5 + n * 2]]));
+        }
+    }
+    Ok(Some(v))
+}
+
+fn tus_ek_yaz(ek: &[u16]) -> Result<()> {
+    for bas in (0..TUS_SAYI).step_by(12) {
+        let adet = (TUS_SAYI - bas).min(12);
+        let mut v = [0u8; 28];
+        v[0] = bas as u8;
+        v[1] = adet as u8;
+        v[2] = (bas + adet >= TUS_SAYI) as u8;
+        for i in 0..adet {
+            v[4 + i * 2..6 + i * 2].copy_from_slice(&ek[bas + i].to_le_bytes());
+        }
+        let c = ham(KMT_TUS_EK_YAZ, &v)?;
+        if c[3] < 17 {
+            if ek.iter().any(|&e| e != 0) {
+                bail!("Birlikte basılacak tuşlar için klavye yazılımını güncelle");
+            }
+            return Ok(());
+        }
+        if c[2] != 0 {
+            bail!("Ek tuşlar klavyeye yazılamadı");
+        }
+    }
+    Ok(())
+}
+
 fn tuslar_yaz(atama: &[u16]) -> Result<()> {
     for bas in (0..TUS_SAYI).step_by(12) {
         let adet = (TUS_SAYI - bas).min(12);
@@ -850,39 +891,57 @@ fn tuslar_yaz(atama: &[u16]) -> Result<()> {
 fn tus_dosya_yolu() -> Option<std::path::PathBuf> {
     std::env::var("LOCALAPPDATA").ok().map(|d| std::path::PathBuf::from(d).join("Volt").join("tuslar.txt"))
 }
-fn tus_dosya_oku() -> Vec<u16> {
-    let mut a = vec![0xFFFFu16; TUS_SAYI];
-    let metin = tus_dosya_yolu().and_then(|y| std::fs::read_to_string(y).ok()).unwrap_or_default();
+/// "led:kod[:ek],..." metnini atama ve ek tuş tablolarına çevirir
+fn tus_metin_coz(metin: &str) -> (Vec<u16>, Vec<u16>) {
+    let (mut a, mut e) = (vec![0xFFFFu16; TUS_SAYI], vec![0u16; TUS_SAYI]);
     for p in metin.trim().split(',') {
-        if let Some((l, k)) = p.split_once(':') {
-            if let (Ok(l), Ok(k)) = (l.trim().parse::<usize>(), k.trim().parse::<u16>()) {
-                if l < TUS_SAYI && k <= 0x1FFF {
-                    a[l] = k;
+        let mut q = p.split(':').map(|x| x.trim().parse::<u32>().ok());
+        if let (Some(Some(l)), Some(Some(k))) = (q.next(), q.next()) {
+            let (l, k) = (l as usize, k);
+            if l < TUS_SAYI && k <= 0x1FFF {
+                a[l] = k as u16;
+                if let Some(Some(x)) = q.next() {
+                    if x <= 0xFFFF && k != 0 {
+                        e[l] = x as u16;
+                    }
                 }
             }
         }
     }
-    a
+    (a, e)
 }
-fn tus_dosya_yaz(a: &[u16]) -> bool {
+fn tus_dosya_oku() -> (Vec<u16>, Vec<u16>) {
+    tus_metin_coz(&tus_dosya_yolu().and_then(|y| std::fs::read_to_string(y).ok()).unwrap_or_default())
+}
+fn tus_dosya_yaz(a: &[u16], e: &[u16]) -> bool {
     let Some(y) = tus_dosya_yolu() else { return false };
     if let Some(d) = y.parent() {
         let _ = std::fs::create_dir_all(d);
     }
-    let m = a.iter().enumerate().filter(|(_, k)| **k != 0xFFFF).map(|(l, k)| format!("{l}:{k}")).collect::<Vec<_>>().join(",");
+    let m = a
+        .iter()
+        .enumerate()
+        .filter(|(_, k)| **k != 0xFFFF)
+        .map(|(l, k)| if e[l] != 0 { format!("{l}:{k}:{}", e[l]) } else { format!("{l}:{k}") })
+        .collect::<Vec<_>>()
+        .join(",");
     std::fs::write(y, m).is_ok()
 }
 fn tuslar_json() -> String {
     match tuslar_oku() {
         Ok(Some(v)) => {
+            let ek = tus_ek_oku().ok().flatten();
             let l = v
                 .iter()
                 .enumerate()
                 .filter(|(_, (d, _))| *d != 0xFFFF)
-                .map(|(i, (d, a))| format!("[{i},{d},{}]", if *a <= 0x1FFF { *a as i32 } else { -1 }))
+                .map(|(i, (d, a))| {
+                    let e = if *a <= 0x1FFF && *a != 0 { ek.as_ref().map_or(0, |x| x[i]) } else { 0 };
+                    format!("[{i},{d},{},{e}]", if *a <= 0x1FFF { *a as i32 } else { -1 })
+                })
                 .collect::<Vec<_>>()
                 .join(",");
-            format!("{{\"ok\":true,\"destek\":true,\"tuslar\":[{l}]}}")
+            format!("{{\"ok\":true,\"destek\":true,\"ek_destek\":{},\"tuslar\":[{l}]}}", ek.is_some())
         }
         Ok(None) => "{\"ok\":true,\"destek\":false}".into(),
         Err(e) => hata_json(&e),
@@ -1422,6 +1481,11 @@ fn istek(mut s: TcpStream) -> bool {
             None => cevapla(&mut s, "404 Not Found", "text/plain", "yok"),
         },
         ("GET", "/api/nabiz") => cevapla(&mut s, "200 OK", "text/plain", "ok"),
+        ("GET", "/api/yenilikler") => {
+            // Bir kez gösterilir: ilk sorgudan sonra kapanır
+            let g = YENILIK_GOSTER.swap(false, Ordering::Relaxed);
+            cevapla(&mut s, "200 OK", "application/json", &format!("{{\"ok\":true,\"goster\":{g}}}"));
+        }
         ("GET", "/api/kilitler") => cevapla(&mut s, "200 OK", "application/json", &kilitler_json()),
         ("GET", "/api/makro") => cevapla(&mut s, "200 OK", "application/json", &makro_json()),
         ("GET", "/api/ses") => {
@@ -1546,20 +1610,11 @@ fn istek(mut s: TcpStream) -> bool {
         }
         ("GET", "/api/tuslar") => cevapla(&mut s, "200 OK", "application/json", &tuslar_json()),
         ("POST", "/api/tuslar") => {
-            // atama="led:kod,led:kod" (atanmayan tuşlar varsayılan); tablonun tamamı yazılır
-            let mut a = vec![0xFFFFu16; TUS_SAYI];
-            for p in url_coz(alan(&govde, "atama").unwrap_or("")).split(',') {
-                if let Some((l, k)) = p.split_once(':') {
-                    if let (Ok(l), Ok(k)) = (l.parse::<usize>(), k.parse::<u16>()) {
-                        if l < TUS_SAYI && k <= 0x1FFF {
-                            a[l] = k;
-                        }
-                    }
-                }
-            }
-            let j = match tuslar_yaz(&a) {
+            // atama="led:kod[:ek],..." (atanmayan tuşlar varsayılan); tabloların tamamı yazılır
+            let (a, e) = tus_metin_coz(&url_coz(alan(&govde, "atama").unwrap_or("")));
+            let j = match tuslar_yaz(&a).and_then(|_| tus_ek_yaz(&e)) {
                 Ok(()) => {
-                    tus_dosya_yaz(&a);
+                    tus_dosya_yaz(&a, &e);
                     tuslar_json()
                 }
                 Err(e) => hata_json(&e),
@@ -1885,7 +1940,67 @@ enum Olay {
     Cikis,
     /// Arayüz teması değişti (true: açık)
     Tema(bool),
+    /// Sayfa cevap veriyor (gösterilince yapılan yoklamaya cevap)
+    Canli,
+    /// Sayfa cevap vermedi: yeniden yükle
+    Yenile,
 }
+
+/// Pencerenin son konumu ve boyutu: "x y genişlik yükseklik büyük" (fiziksel piksel)
+fn pencere_oku(yol: &std::path::Path) -> Option<(i32, i32, u32, u32, bool)> {
+    let t = std::fs::read_to_string(yol).ok()?;
+    let p: Vec<&str> = t.split_whitespace().collect();
+    if p.len() != 5 {
+        return None;
+    }
+    Some((p[0].parse().ok()?, p[1].parse().ok()?, p[2].parse().ok()?, p[3].parse().ok()?, p[4] == "1"))
+}
+
+fn pencere_kaydet(pen: &tao::window::Window, yol: &std::path::Path) {
+    if !pen.is_visible() || pen.is_minimized() {
+        return;
+    }
+    let buyuk = pen.is_maximized();
+    // Büyütülmüşken normal boyut bilinmez: öncekini koru, sadece "büyük" bilgisini güncelle
+    let (x, y, w, h) = if buyuk {
+        match pencere_oku(yol) {
+            Some((x, y, w, h, _)) => (x, y, w, h),
+            // Hiç kayıt yokken büyütülmüş: küçültülünce kullanılacak boyut ekranın ortasında varsayılan boyut olsun
+            None => {
+                let Some(m) = pen.current_monitor() else { return };
+                let b = tao::dpi::LogicalSize::new(1280.0, 820.0).to_physical::<u32>(m.scale_factor());
+                let (mp, ms) = (m.position(), m.size());
+                (mp.x + (ms.width.saturating_sub(b.width) / 2) as i32, mp.y + (ms.height.saturating_sub(b.height) / 2) as i32, b.width, b.height)
+            }
+        }
+    } else {
+        let Ok(k) = pen.outer_position() else { return };
+        let b = pen.inner_size();
+        (k.x, k.y, b.width, b.height)
+    };
+    let _ = std::fs::write(yol, format!("{x} {y} {w} {h} {}", buyuk as u8));
+}
+
+/// Bu sürüm ilk kez açıldı ve Volt daha önce kullanılmıştı: arayüz "Yenilikler" penceresini gösterir
+static YENILIK_GOSTER: AtomicBool = AtomicBool::new(false);
+
+/// Son açılan sürümü surum.txt'ye yazar; sürüm değiştiyse (ya da eski bir sürümden geliniyorsa) yenilikler gösterilir.
+/// Hiç kullanılmamış kurulumda (WebView verisi yok) gösterilmez: yeni kullanıcı rehberi görür.
+fn yenilik_denetle(veri: &std::path::Path) {
+    let dosya = veri.join("surum.txt");
+    let onceki = std::fs::read_to_string(&dosya).ok();
+    let kullanilmis = veri.join("EBWebView").exists();
+    let goster = match &onceki {
+        Some(s) => s.trim() != pusat_rgb::kurulum::SURUM,
+        None => kullanilmis,
+    };
+    YENILIK_GOSTER.store(goster, Ordering::Relaxed);
+    let _ = std::fs::create_dir_all(veri);
+    let _ = std::fs::write(&dosya, pusat_rgb::kurulum::SURUM);
+}
+
+/// Sayfanın son "canlı" cevabının sayacı (gösterince yoklanır, cevap gelmezse sayfa yenilenir)
+static SAYFA_CANLI: AtomicU64 = AtomicU64::new(0);
 
 /// Uygulama simgesi: koyu yuvarlak kare üzerinde beyaz şimşek (n x n RGBA)
 fn simge(n: u32) -> Option<tao::window::Icon> {
@@ -1945,11 +2060,26 @@ fn pencere(arka: bool) -> Result<()> {
             });
         });
     }
-    let pen = WindowBuilder::new()
+    // Son pencere konumu/boyutu (konum hâlâ bir ekranın içindeyse)
+    let pencere_dosya = std::env::var("LOCALAPPDATA").map(|d| std::path::PathBuf::from(d).join("Volt").join("pencere.txt")).ok();
+    let son = pencere_dosya.as_deref().and_then(pencere_oku).filter(|&(_, _, w, h, _)| w >= 400 && h >= 300);
+    let mut kurucu = WindowBuilder::new();
+    if let Some((x, y, w, h, buyuk)) = son {
+        kurucu = kurucu.with_inner_size(tao::dpi::PhysicalSize::new(w, h)).with_maximized(buyuk);
+        let ekranda = dongu.available_monitors().any(|m| {
+            let (p, b) = (m.position(), m.size());
+            x + 60 >= p.x && x + 60 < p.x + b.width as i32 && y + 10 >= p.y && y + 10 < p.y + b.height as i32
+        });
+        if ekranda {
+            kurucu = kurucu.with_position(tao::dpi::PhysicalPosition::new(x, y));
+        }
+    } else {
+        kurucu = kurucu.with_inner_size(LogicalSize::new(1280.0, 820.0));
+    }
+    let pen = kurucu
         .with_title("Volt")
         .with_decorations(false)
         .with_undecorated_shadow(true)
-        .with_inner_size(LogicalSize::new(1280.0, 820.0))
         .with_min_inner_size(LogicalSize::new(980.0, 620.0))
         .with_window_icon(simge(32))
         .with_taskbar_icon(simge(64))
@@ -1961,6 +2091,9 @@ fn pencere(arka: bool) -> Result<()> {
     // Son kullanılan tema: pencere açılırken arka plan aynı renkte olsun
     let tema_dosya = veri.as_ref().map(|v| v.join("tema.txt"));
     let acik_tema = tema_dosya.as_ref().and_then(|d| std::fs::read_to_string(d).ok()).is_some_and(|t| t.trim() == "acik");
+    if let Some(v) = &veri {
+        yenilik_denetle(v);
+    }
     let mut baglam = WebContext::new(veri);
     let gorunum = WebViewBuilder::new_with_web_context(&mut baglam)
         .with_url(format!("http://127.0.0.1:{PORT}/{}", if KALDIR_MODU.load(Ordering::Relaxed) { "#kaldir" } else { "" }))
@@ -1977,6 +2110,7 @@ fn pencere(arka: bool) -> Result<()> {
                 "kapat" => Olay::Kapat,
                 "tema:acik" => Olay::Tema(true),
                 "tema:koyu" => Olay::Tema(false),
+                "canli" => Olay::Canli,
                 "n" => Olay::Boyut(Y::North),
                 "s" => Olay::Boyut(Y::South),
                 "e" => Olay::Boyut(Y::East),
@@ -1993,7 +2127,12 @@ fn pencere(arka: bool) -> Result<()> {
         .context("WebView2 başlatılamadı")?;
     if !arka {
         pen.set_visible(true);
+    } else {
+        // Arkada başlarken sayfa da gizli sayılsın: çizim döngüsü boşuna çalışmasın
+        let _ = gorunum.set_visible(false);
     }
+    let sayfa_adres = format!("http://127.0.0.1:{PORT}/");
+    let yoklayici = dongu.create_proxy();
     let mut ilk_gizleme = true;
 
     dongu.run(move |olay, _, akis| {
@@ -2001,18 +2140,42 @@ fn pencere(arka: bool) -> Result<()> {
         match olay {
             Event::WindowEvent { event: WindowEvent::CloseRequested, .. } | Event::UserEvent(Olay::Kapat) => {
                 // Kapatınca tepsiye iner: ses modu ve profiller çalışmaya devam eder
+                if let Some(d) = &pencere_dosya {
+                    pencere_kaydet(&pen, d);
+                }
                 pen.set_visible(false);
+                let _ = gorunum.set_visible(false);
                 if ilk_gizleme {
                     ilk_gizleme = false;
                     pusat_rgb::tepsi::bildirim("Volt arka planda çalışıyor", "Tamamen kapatmak için tepsideki simgeye sağ tıkla → Çıkış");
                 }
             }
             Event::UserEvent(Olay::Goster) => {
+                let _ = gorunum.set_visible(true);
                 pen.set_visible(true);
                 pen.set_minimized(false);
                 pen.set_focus();
+                // Uzun süre arkada kalınca WebView2 sayfası çökmüş olabilir: yokla, cevap yoksa yenile
+                let once = SAYFA_CANLI.load(Ordering::SeqCst);
+                let _ = gorunum.evaluate_script("window.ipc.postMessage('canli')");
+                let v = yoklayici.clone();
+                std::thread::spawn(move || {
+                    std::thread::sleep(Duration::from_millis(2500));
+                    if SAYFA_CANLI.load(Ordering::SeqCst) == once {
+                        let _ = v.send_event(Olay::Yenile);
+                    }
+                });
+            }
+            Event::UserEvent(Olay::Canli) => {
+                SAYFA_CANLI.fetch_add(1, Ordering::SeqCst);
+            }
+            Event::UserEvent(Olay::Yenile) => {
+                let _ = gorunum.load_url(&sayfa_adres);
             }
             Event::UserEvent(Olay::Cikis) => {
+                if let Some(d) = &pencere_dosya {
+                    pencere_kaydet(&pen, d);
+                }
                 pusat_rgb::tepsi::kaldir();
                 std::process::exit(0)
             }
@@ -2030,7 +2193,22 @@ fn pencere(arka: bool) -> Result<()> {
                     let _ = std::fs::write(d, if acik { "acik" } else { "koyu" });
                 }
             }
-            Event::UserEvent(Olay::Kucult) => pen.set_minimized(true),
+            Event::UserEvent(Olay::Kucult) => {
+                if let Some(d) = &pencere_dosya {
+                    pencere_kaydet(&pen, d);
+                }
+                pen.set_minimized(true);
+                let _ = gorunum.set_visible(false);
+            }
+            Event::WindowEvent { event: WindowEvent::Focused(false), .. } => {
+                if let Some(d) = &pencere_dosya {
+                    pencere_kaydet(&pen, d);
+                }
+            }
+            Event::WindowEvent { event: WindowEvent::Focused(true), .. } => {
+                // Simge durumundan görev çubuğuyla geri gelince
+                let _ = gorunum.set_visible(true);
+            }
             Event::UserEvent(Olay::Buyut) => pen.set_maximized(!pen.is_maximized()),
             Event::WindowEvent { event: WindowEvent::Resized(_), .. } => {
                 let _ = gorunum.evaluate_script(&format!("window.pencereBuyuk && pencereBuyuk({})", pen.is_maximized()));

@@ -28,6 +28,7 @@ enum ozel_tuslar {
     TEKER_MOD,            // medya tuşlarının yanındaki geçiş tuşu: tekerlek = ses / ışık parlaklığı
     PROFIL_1, PROFIL_2, PROFIL_3, PROFIL_4, // M1..M4: profil seç
     PROFIL_GERI,          // MR: profili kayıtlı hâline döndür
+    TUS_COKLU,            // atanmış tuş + ek tuşlar birlikte (tuş atama, sürüm 17)
 };
 
 // G tuşları: G1 = Ctrl + Num *, G2 = Ctrl + Num -, G3 = Ctrl + Num + (kullanıcının eski atamaları)
@@ -293,8 +294,10 @@ enum {
     KMT_TUS_YAZ    = 0xB6, // [2]=baş LED (çift; 0 = tabloyu sil) [3]=adet(<=12) [4]=1: son paket, imzala [6..29] kodlar (0xFFFF = atama yok)
     KMT_ACILIS     = 0xB7, // [2]=0 oku, 1 stili [3] yap ve kaydet, 2 [3] stilini şimdi oynat (kaydetmez); cevap [4] stil (sürüm 14)
     KMT_SISTEM     = 0xB8, // [2] sol şerit [3] sağ şerit doluluğu (0..255); sadece RAM (sürüm 15)
+    KMT_TUS_EK_OKU = 0xBA, // [2]=baş LED: cevap [4..31] 14 tuşun ek tuşları (u16: ek1 | ek2 << 8) (sürüm 17)
+    KMT_TUS_EK_YAZ = 0xBB, // KMT_TUS_YAZ ile aynı biçim; ek tuş tablosu (sürüm 17)
     KMT_SAYAC      = 0xB9, // [2]=baş LED [3]=1: okununca sıfırla; cevap [4..31] 14 LED x u16 basış sayısı
-    PROTOKOL_SUR = 16,
+    PROTOKOL_SUR = 17,
 };
 
 static uint32_t tus_sayaci = 0; // açılıştan beri basılan tuş sayısı
@@ -350,16 +353,43 @@ static bool tus_konum(uint8_t led, uint8_t *satir, uint8_t *sutun) {
     return false;
 }
 
+/* Ek tuşlar: atanmış tuşla birlikte basılacak en çok iki tuş daha. Flash 0xE700 (4 sayfa):
+ * [0] imza, [4 + i*2] ek1 | ek2 << 8 (0 = yok). Yazılım yüklenince bölge 0 olur, imza olmadığından yok sayılır. */
+#define EK_ADRES 0xE700u
+#define EK_IMZA  0x4B455441u // "ATEK"
+
+static uint16_t tus_ek(uint8_t l) {
+    if (l >= TUS_SAYI || *(const uint32_t *)EK_ADRES != EK_IMZA) return 0;
+    uint16_t e = ((const uint16_t *)(EK_ADRES + 4))[l];
+    return e == 0xFFFF ? 0 : e;
+}
+
 uint16_t keymap_key_to_keycode(uint8_t layer, keypos_t key) {
     uint16_t k = pgm_read_word(&keymaps[layer][key.row][key.col]);
     if (layer == 0 && key.row < 6 && k <= 0xFF && *(const uint32_t *)TUS_ADRES == TUS_IMZA) {
         uint8_t l = g_led_config.matrix_co[key.row][key.col];
         if (l < TUS_SAYI) {
             uint16_t a = ((const uint16_t *)(TUS_ADRES + 4))[l];
-            if (a <= QK_MODS_MAX) return a;
+            if (a <= QK_MODS_MAX) return a != 0 && tus_ek(l) ? TUS_COKLU : a;
         }
     }
     return k;
+}
+
+/* TUS_COKLU: tuşun atamasını ve ek tuşlarını birlikte bas / bırak */
+static void tus_coklu(keyrecord_t *record) {
+    uint8_t l = g_led_config.matrix_co[record->event.key.row][record->event.key.col];
+    if (l >= TUS_SAYI) return;
+    uint16_t a = ((const uint16_t *)(TUS_ADRES + 4))[l], e = tus_ek(l);
+    if (record->event.pressed) {
+        register_code16(a);
+        if (e & 0xFF) register_code(e & 0xFF);
+        if (e >> 8) register_code(e >> 8);
+    } else {
+        if (e >> 8) unregister_code(e >> 8);
+        if (e & 0xFF) unregister_code(e & 0xFF);
+        unregister_code16(a);
+    }
 }
 
 /* Makro yardımcıları (aşağıda tanımlı) */
@@ -542,6 +572,30 @@ void raw_hid_receive(uint8_t *data, uint8_t length) {
             }
             raw_hid_send(data, length);
             return;
+        }
+        case KMT_TUS_EK_OKU: {
+            uint8_t bas = data[2];
+            memset(&data[2], 0, length - 2);
+            data[3] = PROTOKOL_SUR;
+            for (uint8_t n = 0; n < 14 && bas + n < TUS_SAYI; n++) {
+                uint16_t e = tus_ek(bas + n);
+                data[4 + n * 2] = e; data[5 + n * 2] = e >> 8;
+            }
+            raw_hid_send(data, length);
+            return;
+        }
+        case KMT_TUS_EK_YAZ: {
+            uint8_t bas = data[2], adet = data[3];
+            if ((bas & 1) || adet > 12 || bas + adet > TUS_SAYI) { durum = 1; break; }
+            if (bas == 0)
+                for (uint8_t k = 0; k < 4; k++) FLASH_EraseSector(EK_ADRES + k * 64);
+            for (uint8_t w = 0; w < (adet + 1) / 2; w++) {
+                const uint8_t *q = &data[6 + w * 4];
+                uint32_t       v = q[0] | (q[1] << 8) | (2 * w + 1 < adet ? (q[2] << 16) | ((uint32_t)q[3] << 24) : 0xFFFF0000u);
+                FLASH_ProgramDWord(EK_ADRES + 4 + bas * 2 + w * 4, v);
+            }
+            if (data[4]) FLASH_ProgramDWord(EK_ADRES, EK_IMZA);
+            break;
         }
         case KMT_TUS_YAZ: {
             uint8_t bas = data[2], adet = data[3];
@@ -752,6 +806,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         hiz_ilerle();
         if (hiz_kova[hiz_son & 7] < 255) hiz_kova[hiz_son & 7]++;
     }
+    if (keycode == TUS_COKLU) { tus_coklu(record); return false; }
     if (makro_isle(keycode, record)) return false;
     if (keycode >= PROFIL_1 && keycode <= PROFIL_4) {
         if (record->event.pressed) profil_sec(keycode - PROFIL_1);
